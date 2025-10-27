@@ -148,6 +148,15 @@ export const reopen = asyncHandler(async (req, res) => {
   if (!row) return res.status(404).json({ error: 'Not found' })
   res.json(row)
 })
+export const remove = asyncHandler(async (req, res) => {
+  const { companyId } = req.user;
+  const { id } = req.params;
+
+  const deleted = await Invoice.findOneAndDelete({ _id: id, companyId });
+  if (!deleted) return res.status(404).json({ error: "Invoice not found or unauthorized" });
+
+  res.json({ success: true });
+});
 
 // GET /api/invoices/kpis
 export const kpis = asyncHandler(async (req, res) => {

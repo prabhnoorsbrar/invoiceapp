@@ -17,17 +17,18 @@ export default function Outstanding() {
   });
 
   useEffect(() => {
-  (async () => {
+    loadData();
+  }, []);
+
+  async function loadData() {
     try {
       const data = await api.listOutstanding();
       setRows(data);
       setKpi(await api.kpis());
     } catch (err) {
       console.error(err);
-      // e.g., redirect to a login page or show a message if unauthorized
     }
-  })();
-}, []);
+  }
 
   async function markPaid(id) {
     const paidDate = prompt(
@@ -36,8 +37,25 @@ export default function Outstanding() {
     );
     if (!paidDate) return;
     await api.markPaid(id, { paidDate });
-    setRows(await api.listOutstanding());
-    setKpi(await api.kpis());
+    loadData();
+  }
+
+  async function reopen(id) {
+    if (!window.confirm("Unmark as paid?")) return;
+    await api.reopen(id);
+    loadData();
+  }
+
+  async function deleteInvoice(id) {
+    if (!window.confirm("Delete this invoice? This cannot be undone.")) return;
+    await fetch(`${import.meta.env.VITE_API_BASE}/api/invoices/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+      },
+    });
+    loadData();
   }
 
   return (
@@ -52,25 +70,50 @@ export default function Outstanding() {
         {rows.map((r) => (
           <div
             key={r._id}
-            className="border rounded-xl p-3 flex flex-col justify-between"
+            className="card bg-base-100 shadow-md border p-4 flex flex-col justify-between"
           >
-            <div>
-              <div className="flex justify-between font-semibold">
-                <span>{r.invoiceNumber}</span>
-                <span>{currency(r.amountCents)}</span>
-              </div>
-              <div className="text-sm text-gray-500">{r.description}</div>
-              <div className="text-xs text-gray-400 mt-1">
-                Issued {r.invoiceDate?.slice(0, 10)} • Due{" "}
-                {r.dueDate?.slice(0, 10)}
-              </div>
+            <div className="flex justify-between items-start">
+              <h2 className="card-title">#{r.invoiceNumber}</h2>
+              <span
+                className={`badge ${r.datePaid ? "badge-success" : "badge-error"}`}
+              >
+                {r.datePaid ? "Paid" : "Unpaid"}
+              </span>
             </div>
-            <button
-              onClick={() => markPaid(r._id)}
-              className="bg-green-600 text-white px-3 py-1 mt-2 rounded"
-            >
-              Mark Paid
-            </button>
+            <div className="text-sm text-gray-600 whitespace-pre-line mt-2">
+              {r.client?.name}
+              <br />
+              {r.client?.address}
+            </div>
+            <div className="text-sm mt-1">
+              <strong>Amount:</strong> {currency(r.amountCents)}
+            </div>
+            <div className="text-xs text-gray-400 mt-1">
+              Issued {r.invoiceDate?.slice(0, 10)} • Due {r.dueDate?.slice(0, 10)}
+            </div>
+            <div className="card-actions justify-end mt-3 flex-wrap gap-2">
+              {r.datePaid ? (
+                <button
+                  onClick={() => reopen(r._id)}
+                  className="btn btn-warning btn-sm"
+                >
+                  Unmark Paid
+                </button>
+              ) : (
+                <button
+                  onClick={() => markPaid(r._id)}
+                  className="btn btn-success btn-sm"
+                >
+                  Mark Paid
+                </button>
+              )}
+              <button
+                onClick={() => deleteInvoice(r._id)}
+                className="btn btn-error btn-sm"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         ))}
       </div>
