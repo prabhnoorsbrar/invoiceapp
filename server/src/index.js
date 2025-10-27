@@ -26,7 +26,7 @@ mongoose
   .connect(process.env.MONGO_URI, { dbName: 'invoicing' })
   .then(() => {
     console.log('✅ Mongo connected successfully')
-    app.listen(PORT, () =>
+    app.listen(PORT,() =>
       console.log(`🚀 API running at http://localhost:${PORT}`)
     )
   })
