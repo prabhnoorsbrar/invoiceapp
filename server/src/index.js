@@ -21,7 +21,7 @@ app.use("/api/clients", clientRoutes);
 app.use("/api/routes", routeRoutes);
 app.use("/api/invoices", invoiceRoutes);
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT;
 mongoose
   .connect(process.env.MONGO_URI, { dbName: 'invoicing' })
   .then(() => {
