@@ -15,6 +15,22 @@ const UserSchema = new mongoose.Schema(
       ref: "Company",
       required: true,
     },
+    address: {
+      type: String,
+      default: "",
+    },
+    phone: {
+      type: String,
+      default: "",
+    },
+    firstName: {
+      type: String,
+      default: "",
+    },
+    lastName: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );
