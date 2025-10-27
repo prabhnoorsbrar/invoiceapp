@@ -17,11 +17,17 @@ export default function Outstanding() {
   });
 
   useEffect(() => {
-    (async () => {
-      setRows(await api.listOutstanding());
+  (async () => {
+    try {
+      const data = await api.listOutstanding();
+      setRows(data);
       setKpi(await api.kpis());
-    })();
-  }, []);
+    } catch (err) {
+      console.error(err);
+      // e.g., redirect to a login page or show a message if unauthorized
+    }
+  })();
+}, []);
 
   async function markPaid(id) {
     const paidDate = prompt(
