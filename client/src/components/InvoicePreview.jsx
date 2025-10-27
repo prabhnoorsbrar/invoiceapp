@@ -57,13 +57,13 @@ export default function InvoicePreview({ company, client, invoice }) {
         <tbody>
           <tr>
             <td className="py-1 align-top">{invoice.description || <span className="text-gray-400">Describe the load…</span>}</td>
-            <td className="py-1 text-right align-top">{currency(invoice.amountCents)}</td>
+            <td className="py-1 text-right align-top">{currency(invoice.amountCents/100)}</td>
           </tr>
         </tbody>
         <tfoot className="border-t font-semibold">
           <tr>
             <td className="text-right py-1">Total</td>
-            <td className="text-right py-1">{currency(invoice.amountCents)}</td>
+            <td className="text-right py-1">{currency(invoice.amountCents/100)}</td>
           </tr>
         </tfoot>
       </table>
