@@ -4,7 +4,7 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "seed:presets": "node src/scripts/seedPresets.js",
+    
     "dev": "nodemon src/index.js",
     "start": "node src/index.js"
   },
