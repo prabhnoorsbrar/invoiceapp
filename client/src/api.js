@@ -2,7 +2,22 @@
 const base = (import.meta.env?.VITE_API_BASE || "http://localhost:4000").replace(/\/+$/, "");
 
 let token = localStorage.getItem("jwt") || "";
+let currentUser = null;
+let currentCompany = null;
 
+try {
+  const storedUser = localStorage.getItem("currentUser");
+  currentUser = storedUser ? JSON.parse(storedUser) : null;
+} catch (err) {
+  currentUser = null;
+}
+
+try {
+  const storedCompany = localStorage.getItem("currentCompany");
+  currentCompany = storedCompany ? JSON.parse(storedCompany) : null;
+} catch (err) {
+  currentCompany = null;
+}
 export function setToken(t) {
   token = t || "";
   if (t) localStorage.setItem("jwt", t);
@@ -11,9 +26,29 @@ export function setToken(t) {
 export function getToken() {
   return token;
 }
+export function setCurrentUser(user) {
+  currentUser = user || null;
+  if (user) localStorage.setItem("currentUser", JSON.stringify(user));
+  else localStorage.removeItem("currentUser");
+}
 
+export function getCurrentUser() {
+  return currentUser;
+}
+
+export function setCurrentCompany(company) {
+  currentCompany = company || null;
+  if (company) localStorage.setItem("currentCompany", JSON.stringify(company));
+  else localStorage.removeItem("currentCompany");
+}
+
+export function getCurrentCompany() {
+  return currentCompany;
+}
 export function logout() {
-  setToken(""); // clears localStorage too
+  setToken("");
+  setCurrentUser(null);
+  setCurrentCompany(null); // clears localStorage too
 }
 
 function headers(extra = {}) {

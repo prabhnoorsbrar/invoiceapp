@@ -19,7 +19,17 @@ export const register = asyncHandler(async (req, res) => {
   });
   res.json({
     token: sign(user),
-    user: { id: user._id, email, companyId: company._id },
+    user: {
+      id: user._id,
+      email,
+      companyId: company._id,
+      role: user.role,
+      address: user.address,
+      phone: user.phone,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    },
+    company: { id: company._id, name: company.name },
   });
 });
 
@@ -28,8 +38,19 @@ export const login = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
   if (!user || !(await user.verifyPassword(password)))
     throw new HttpError(401, "Invalid credentials");
+  const company = await Company.findById(user.companyId);
   res.json({
     token: sign(user),
-    user: { id: user._id, email, companyId: user.companyId, role: user.role },
+    user: {
+      id: user._id,
+      email,
+      companyId: user.companyId,
+      role: user.role,
+      address: user.address,
+      phone: user.phone,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    },
+    company: company ? { id: company._id, name: company.name } : null,
   });
 });

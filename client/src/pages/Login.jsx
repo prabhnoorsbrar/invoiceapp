@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { api, setToken } from "../api";
+import { api, setToken, setCurrentUser, setCurrentCompany } from "../api";
 
 export default function Login({ onSuccess }) {
   const [email, setEmail] = useState("");
@@ -15,7 +15,9 @@ export default function Login({ onSuccess }) {
       const res = await api.login(email, password);
       if (res?.token) {
         setToken(res.token);
-        onSuccess?.(); // tells App.jsx "we're logged in!"
+        setCurrentUser(res.user);
+        setCurrentCompany(res.company);
+        onSuccess?.(res.user, res.company); // tells App.jsx "we're logged in!" // tells App.jsx "we're logged in!"
       } else {
         setError("Login failed: No token returned");
       }

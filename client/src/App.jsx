@@ -1,23 +1,41 @@
 import React, { useState, useEffect } from "react";
-import { logout } from "./api";
+import { logout, getCurrentUser, getCurrentCompany } from "./api";
 import CreateInvoice from "./pages/CreateInvoice";
 import Outstanding from "./pages/Outstanding";
 import Search from "./pages/Search";
 import Login from "./pages/Login";
 
 export default function App() {
-  const [authed, setAuthed] = useState(false);
+  
+  const [authed, setAuthed] = useState(() => !!localStorage.getItem("jwt"));
   const [view, setView] = useState("outstanding");
+  const [user, setUser] = useState(() => getCurrentUser());
+  const [company, setCompany] = useState(() => getCurrentCompany());
 
   // On first load, check for saved token
   useEffect(() => {
     const token = localStorage.getItem("jwt");
     setAuthed(!!token);
+    if (token) {
+      setUser(getCurrentUser());
+      setCompany(getCurrentCompany());
+    } else {
+      setUser(null);
+      setCompany(null);
+    }
   }, []);
 
   // ❗ This prevents the full app from showing if user isn't logged in
   if (!authed) {
-    return <Login onSuccess={() => setAuthed(true)} />;
+    return (
+      <Login
+        onSuccess={(nextUser, nextCompany) => {
+          setAuthed(true);
+          setUser(nextUser || null);
+          setCompany(nextCompany || null);
+        }}
+      />
+    );
   }
 
   return (
@@ -47,6 +65,8 @@ export default function App() {
           onClick={() => {
             logout();
             setAuthed(false);
+            setUser(null);
+            setCompany(null);
           }}
           className="text-sm underline"
         >
@@ -54,7 +74,8 @@ export default function App() {
         </button>
       </header>
 
-      {view === "create" && <CreateInvoice />}
+      
+      {view === "create" && <CreateInvoice company={company} currentUser={user} />}
       {view === "outstanding" && <Outstanding />}
       {view === "search" && <Search />}
     </div>

@@ -3,7 +3,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { api } from "../api";
 import InvoicePreview from "../components/InvoicePreview";
 
-export default function CreateInvoice() {
+export default function CreateInvoice({ company, currentUser }) {
   const [step, setStep] = useState(1);
   const [clients, setClients] = useState([]);
   const [routes, setRoutes] = useState([]);
@@ -199,7 +199,8 @@ export default function CreateInvoice() {
       <aside className="lg:sticky lg:top-4">
         {step === 3 && (
           <InvoicePreview
-            company={{ name: "US PRIDE LOGISTICS INC" }}
+            company={company}
+            user={currentUser}
             client={selectedClient}
             invoice={{
               invoiceNumber,
