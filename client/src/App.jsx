@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { logout, getCurrentUser, getCurrentCompany } from "./api";
+import { logout, getCurrentUser, getCurrentCompany, getSessionProfile } from "./api";
 import CreateInvoice from "./pages/CreateInvoice";
 import Outstanding from "./pages/Outstanding";
 import Search from "./pages/Search";
 import Login from "./pages/Login";
 
 export default function App() {
-  
+  const initialSession = getSessionProfile();
   const [authed, setAuthed] = useState(() => !!localStorage.getItem("jwt"));
   const [view, setView] = useState("outstanding");
   const [user, setUser] = useState(() => getCurrentUser());

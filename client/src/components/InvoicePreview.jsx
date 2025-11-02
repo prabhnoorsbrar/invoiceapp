@@ -26,8 +26,11 @@ export default function InvoicePreview({ company, user, client, invoice }) {
     : [];
 
   const phone = user?.phone?.trim();
+  const contactName = [user?.firstName, user?.lastName]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(" ");
   const amountCents = invoice?.amountCents ?? 0;
-
 
   return (
     <div className="bg-white text-black rounded-lg shadow-lg p-6 w-full max-w-md">
@@ -38,7 +41,9 @@ export default function InvoicePreview({ company, user, client, invoice }) {
       <div className="mb-4">
         <div className="font-bold text-lg">{businessName}</div>
         {addressLines.length ? (
-          addressLines.map((line, idx) => <div key={`${line}-${idx}`}>{line}</div>)
+          addressLines.map((line, idx) => (
+            <div key={`${line}-${idx}`}>{line}</div>
+          ))
         ) : (
           <div className="text-gray-400">Add your company address</div>
         )}
@@ -52,7 +57,9 @@ export default function InvoicePreview({ company, user, client, invoice }) {
         </div>
         <div>
           <div className="text-gray-600">Date</div>
-          <div className="font-semibold">{formatDate(invoice?.invoiceDate)}</div>
+          <div className="font-semibold">
+            {formatDate(invoice?.invoiceDate)}
+          </div>
         </div>
       </div>
 
@@ -84,12 +91,14 @@ export default function InvoicePreview({ company, user, client, invoice }) {
         </thead>
         <tbody>
           <tr>
-             <td className="py-1 align-top">
+            <td className="py-1 align-top">
               {invoice?.description || (
                 <span className="text-gray-400">Describe the load…</span>
               )}
             </td>
-            <td className="py-1 text-right align-top">{currency(amountCents)}</td>
+            <td className="py-1 text-right align-top">
+              {currency(amountCents)}
+            </td>
           </tr>
         </tbody>
         <tfoot className="border-t font-semibold">
@@ -109,6 +118,11 @@ export default function InvoicePreview({ company, user, client, invoice }) {
         </button>
         <button className="btn btn-sm">Download PDF</button>
       </div>
+      <p className="mt-6 text-xs text-gray-500 italic">
+        Make payments to {businessName}. Feel free to reach out to{" "}
+        {contactName || "your contact"}
+        {phone ? ` @ ${phone}` : ""}.
+      </p>
     </div>
   );
 }

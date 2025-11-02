@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { api, setToken, setCurrentUser, setCurrentCompany } from "../api";
+import { api, setToken, setCurrentUser, setCurrentCompany,applyAuthResult } from "../api";
+
 
 export default function Login({ onSuccess }) {
   const [email, setEmail] = useState("");

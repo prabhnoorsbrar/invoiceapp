@@ -45,6 +45,18 @@ export function setCurrentCompany(company) {
 export function getCurrentCompany() {
   return currentCompany;
 }
+export function getSessionProfile() {
+  return { user: currentUser, company: currentCompany };
+}
+
+export function applyAuthResult(result = {}) {
+  const { token: nextToken, user, company } = result;
+  if (nextToken) setToken(nextToken);
+  if (user !== undefined) setCurrentUser(user);
+  if (company !== undefined) setCurrentCompany(company);
+  return getSessionProfile();
+}
+
 export function logout() {
   setToken("");
   setCurrentUser(null);
