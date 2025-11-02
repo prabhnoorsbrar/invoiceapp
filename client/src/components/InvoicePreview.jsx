@@ -1,4 +1,5 @@
 // Updated InvoicePreview.jsx with better styling and dynamic invoice number
+// Updated InvoicePreview.jsx with formatted address parsing
 import React from "react";
 
 export default function InvoicePreview({ company, user, client, invoice }) {
@@ -13,19 +14,46 @@ export default function InvoicePreview({ company, user, client, invoice }) {
     const d = new Date(iso);
     return isNaN(d) ? "—" : d.toISOString().slice(0, 10);
   };
+
+  // --- Address parsing helper ---
+  const parseAddress = (addressStr) => {
+    if (!addressStr) return { street: "", cityStateZip: "" };
+    const cleaned = addressStr.replace(/\s+,/g, ",").trim();
+    const lines = cleaned.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    let street = "", cityStateZip = "";
+
+    if (lines.length >= 2) {
+      street = lines[0];
+      cityStateZip = lines[1];
+    } else {
+      const [, s1 = "", s2 = ""] = cleaned.match(/^([^,]+),(.*)$/) || [];
+      if (s2) {
+        street = s1.trim();
+        cityStateZip = s2.trim().replace(/^,/, "").trim();
+      } else {
+        street = cleaned;
+      }
+    }
+
+    const m = cityStateZip.match(/^(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/);
+    if (m) {
+      const [, city, st, zip] = m;
+      cityStateZip = `${city.trim()}, ${st} ${zip}`;
+    }
+
+    return { street, cityStateZip };
+  };
+
+  // --- Company + user info ---
   const businessName =
     (company?.name && company.name.trim()) ||
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
     "Company name";
 
-  const addressLines = user?.address
-    ? user.address
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter(Boolean)
-    : [];
+  const addressStr = (company?.address?.trim() || user?.address?.trim() || "");
+  const { street, cityStateZip } = parseAddress(addressStr);
 
-  const phone = user?.phone?.trim();
+  const phone = user?.phone?.trim() || company?.phone?.trim() || "";
   const contactName = [user?.firstName, user?.lastName]
     .map((part) => part?.trim())
     .filter(Boolean)
@@ -40,13 +68,8 @@ export default function InvoicePreview({ company, user, client, invoice }) {
 
       <div className="mb-4">
         <div className="font-bold text-lg">{businessName}</div>
-        {addressLines.length ? (
-          addressLines.map((line, idx) => (
-            <div key={`${line}-${idx}`}>{line}</div>
-          ))
-        ) : (
-          <div className="text-gray-400">Add your company address</div>
-        )}
+        {street && <div>{street}</div>}
+        {cityStateZip && <div>{cityStateZip}</div>}
         {phone && <div>{phone}</div>}
       </div>
 
