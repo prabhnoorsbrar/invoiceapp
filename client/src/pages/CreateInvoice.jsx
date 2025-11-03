@@ -20,7 +20,7 @@ export default function CreateInvoice({ company, currentUser }) {
   useEffect(() => {
     (async () => {
       const list = await api.listClients();
-      console.log("Fetched clients:", list);
+      //console.log("Fetched clients:", list);
       setClients(list);
     })();
   }, []);
