@@ -1,8 +1,10 @@
 // Updated InvoicePreview.jsx with better styling and dynamic invoice number
 // Updated InvoicePreview.jsx with formatted address parsing
 import React from "react";
-
+import html2canvas from "html2canvas-pro";
+import { jsPDF } from "jspdf";
 export default function InvoicePreview({ company, user, client, invoice }) {
+  const previewRef = React.useRef(null);
   const currency = (valueInCents) =>
     new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -10,9 +12,9 @@ export default function InvoicePreview({ company, user, client, invoice }) {
     }).format((valueInCents ?? 0) / 100);
 
   const formatDate = (iso) => {
-    if (!iso) return "—";
+    if (!iso) return null;
     const d = new Date(iso);
-    return isNaN(d) ? "—" : d.toISOString().slice(0, 10);
+    return isNaN(d) ? null : d.toISOString().slice(0, 10);
   };
 
   // --- Address parsing helper ---
@@ -58,79 +60,195 @@ export default function InvoicePreview({ company, user, client, invoice }) {
     .map((part) => part?.trim())
     .filter(Boolean)
     .join(" ");
+    const invoiceNumber = invoice?.invoiceNumber
+    ? String(invoice.invoiceNumber).trim()
+    : "";
+  const formattedInvoiceDate = formatDate(invoice?.invoiceDate);
+  const loadRef = invoice?.loadRef?.trim() || "";
+  const hasContactName = Boolean(contactName);
+  const hasPhone = Boolean(phone);
   const amountCents = invoice?.amountCents ?? 0;
+  
+  const enableOklchFallback = React.useCallback(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return () => {};
+    }
+    const originalGetComputedStyle = window.getComputedStyle;
+
+    const convertOklchToRgb = (input) => {
+      if (typeof input !== "string" || !input.includes("oklch")) {
+        return input;
+      }
+
+      if (!document.body) return input;
+
+      return input.replace(/oklch\([^)]*\)/g, (match) => {
+        try {
+          const probe = document.createElement("span");
+          probe.style.color = match;
+          document.body.appendChild(probe);
+          const resolved = originalGetComputedStyle(probe).color;
+          probe.remove();
+          return resolved || match;
+        } catch (error) {
+          console.warn("Failed to resolve OKLCH color", error);
+          return match;
+        }
+      });
+    };
+
+    window.getComputedStyle = (...args) => {
+      const style = originalGetComputedStyle(...args);
+      return new Proxy(style, {
+        get(target, prop, receiver) {
+          const value = Reflect.get(target, prop);
+          if (typeof value === "function") {
+            const bound = value.bind(target);
+            return (...fnArgs) => {
+              const result = bound(...fnArgs);
+              return typeof result === "string" ? convertOklchToRgb(result) : result;
+            };
+          }
+          return typeof value === "string" ? convertOklchToRgb(value) : value;
+        },
+      });
+    };
+
+    return () => {
+      window.getComputedStyle = originalGetComputedStyle;
+    };
+  }, []);
+
+  const handleDownloadPdf = async () => {
+    if (!previewRef.current) return;
+
+    const restoreGetComputedStyle = enableOklchFallback();
+
+    try {
+      const canvas = await html2canvas(previewRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const ratio = Math.min(
+        pageWidth / canvas.width,
+        pageHeight / canvas.height
+      );
+      const imgWidth = canvas.width * ratio;
+      const imgHeight = canvas.height * ratio;
+      const x = (pageWidth - imgWidth) / 2;
+      const y = (pageHeight - imgHeight) / 2;
+
+      pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight, undefined, "FAST");
+
+      const invoiceNumber = invoice?.invoiceNumber
+        ? String(invoice.invoiceNumber).trim()
+        : "";
+      const filename = invoiceNumber
+        ? `Invoice ${invoiceNumber}.pdf`
+        : "Invoice Preview.pdf";
+
+      pdf.save(filename);
+    } finally {
+      restoreGetComputedStyle();
+    }
+  };
 
   return (
-    <div className="bg-white text-black rounded-lg shadow-lg p-6 w-full max-w-md">
-      <div className="text-sm text-gray-500 mb-2 font-medium">
-        Invoice Preview
-      </div>
-
-      <div className="mb-4">
-        <div className="font-bold text-lg">{businessName}</div>
-        {street && <div>{street}</div>}
-        {cityStateZip && <div>{cityStateZip}</div>}
-        {phone && <div>{phone}</div>}
-      </div>
-
-      <div className="flex justify-between text-sm mb-4">
-        <div>
-          <div className="text-gray-600">Invoice #</div>
-          <div className="font-semibold">{invoice?.invoiceNumber || "TBD"}</div>
+    <div className="w-full max-w-md">
+      <div
+        ref={previewRef}
+        className="bg-white text-black rounded-lg shadow-lg p-6"
+      >
+        <div
+          className="text-sm text-gray-500 mb-2 font-medium"
+          data-html2canvas-ignore="true"
+        >
+          Invoice Preview
         </div>
-        <div>
-          <div className="text-gray-600">Date</div>
-          <div className="font-semibold">
-            {formatDate(invoice?.invoiceDate)}
+  
+
+      
+
+      
+       <div className="mb-4">
+          <div className="font-bold text-lg">{businessName}</div>
+          {street && <div>{street}</div>}
+          {cityStateZip && <div>{cityStateZip}</div>}
+          {phone && <div>{phone}</div>}
+          </div>
+          <div className="flex justify-between text-sm mb-4">
+          <div>
+            <div className="text-gray-600">Invoice #</div>
+            <div className="font-semibold">{invoice?.invoiceNumber || "TBD"}</div>
+          </div>
+          <div>
+            <div className="text-gray-600">Date</div>
+            <div className="font-semibold">{formatDate(invoice?.invoiceDate)}</div>
           </div>
         </div>
-      </div>
+      
 
-      <hr className="my-3" />
-
+        <hr className="my-3" />
       <div className="text-sm mb-3">
-        <div className="font-semibold">Bill To</div>
-        <div className="font-medium">{client?.name || "—"}</div>
-        <div className="text-gray-600 whitespace-pre-line">
-          {client?.address || ""}
+          <div className="font-semibold">Bill To</div>
+          <div className="font-medium">{client?.name || "—"}</div>
+          <div className="text-gray-600 whitespace-pre-line">
+            {client?.address || ""}</div>
+          {client?.paymentTermsDays && (
+            <div className="text-gray-500 mt-1">Terms: Net {client.paymentTermsDays}</div>
+          )}
         </div>
-        {client?.paymentTermsDays && (
-          <div className="text-gray-500 mt-1">
-            Terms: Net {client.paymentTermsDays}
-          </div>
-        )}
-      </div>
+       <div
+          className="text-sm mb-4"
+          data-html2canvas-ignore={loadRef ? undefined : "true"}
+        >
+          <span className="font-medium">Load/Ref:</span>{" "}
+          {loadRef || (
+            <span className="text-gray-400" data-html2canvas-ignore="true">
+              —
+            </span>
+          )}
+        </div>
 
-      <div className="text-sm mb-4">
-        <span className="font-medium">Load/Ref:</span> {invoice?.loadRef || "—"}
-      </div>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-1">Description</th>
+              <th className="text-right py-1">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="py-1 align-top">
+                {invoice?.description || (
+                  <span className="text-gray-400">Describe the load…</span>
+                )}
+              </td>
+              <td className="py-1 text-right align-top">{currency(amountCents)}</td>
+            </tr>
+          </tbody>
+          <tfoot className="border-t font-semibold">
+            <tr>
+              <td className="text-right py-1">Total</td>
+              <td className="text-right py-1">{currency(amountCents)}</td>
+            </tr>
+          </tfoot>
+        </table>
 
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b">
-            <th className="text-left py-1">Description</th>
-            <th className="text-right py-1">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td className="py-1 align-top">
-              {invoice?.description || (
-                <span className="text-gray-400">Describe the load…</span>
-              )}
-            </td>
-            <td className="py-1 text-right align-top">
-              {currency(amountCents)}
-            </td>
-          </tr>
-        </tbody>
-        <tfoot className="border-t font-semibold">
-          <tr>
-            <td className="text-right py-1">Total</td>
-            <td className="text-right py-1">{currency(amountCents)}</td>
-          </tr>
-        </tfoot>
-      </table>
+        <p className="mt-6 text-xs text-gray-500 italic">
+          Make payments to {businessName}. Feel free to reach out to {" "}
+          {contactName || "your contact"}
+          {phone ? ` @ ${phone}` : ""}.
+        </p>
+      </div>
 
       <div className="mt-4 flex gap-2 text-sm">
         <button
@@ -139,13 +257,11 @@ export default function InvoicePreview({ company, user, client, invoice }) {
         >
           Print
         </button>
-        <button className="btn btn-sm">Download PDF</button>
+        <button onClick={handleDownloadPdf} className="btn btn-sm">
+          Download PDF
+        </button>
       </div>
-      <p className="mt-6 text-xs text-gray-500 italic">
-        Make payments to {businessName}. Feel free to reach out to{" "}
-        {contactName || "your contact"}
-        {phone ? ` @ ${phone}` : ""}.
-      </p>
+      
     </div>
   );
 }
