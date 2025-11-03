@@ -21,8 +21,12 @@ export default function InvoicePreview({ company, user, client, invoice }) {
   const parseAddress = (addressStr) => {
     if (!addressStr) return { street: "", cityStateZip: "" };
     const cleaned = addressStr.replace(/\s+,/g, ",").trim();
-    const lines = cleaned.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
-    let street = "", cityStateZip = "";
+    const lines = cleaned
+      .split(/\r?\n/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    let street = "",
+      cityStateZip = "";
 
     if (lines.length >= 2) {
       street = lines[0];
@@ -52,7 +56,7 @@ export default function InvoicePreview({ company, user, client, invoice }) {
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
     "Company name";
 
-  const addressStr = (company?.address?.trim() || user?.address?.trim() || "");
+  const addressStr = company?.address?.trim() || user?.address?.trim() || "";
   const { street, cityStateZip } = parseAddress(addressStr);
 
   const phone = user?.phone?.trim() || company?.phone?.trim() || "";
@@ -60,19 +64,74 @@ export default function InvoicePreview({ company, user, client, invoice }) {
     .map((part) => part?.trim())
     .filter(Boolean)
     .join(" ");
-    const invoiceNumber = invoice?.invoiceNumber
+
+  const invoiceNumber = invoice?.invoiceNumber
     ? String(invoice.invoiceNumber).trim()
     : "";
   const formattedInvoiceDate = formatDate(invoice?.invoiceDate);
   const loadRef = invoice?.loadRef?.trim() || "";
   const hasContactName = Boolean(contactName);
   const hasPhone = Boolean(phone);
-  const amountCents = invoice?.amountCents ?? 0;
-  
+  const invoiceLineItems = React.useMemo(() => {
+    if (Array.isArray(invoice?.lineItems) && invoice.lineItems.length) {
+      return invoice.lineItems.map((item, index) => ({
+        id: item?.id || `line-${index}`,
+        description: item?.description || "",
+        amountCents:
+          typeof item?.amountCents === "number" &&
+          Number.isFinite(item.amountCents)
+            ? item.amountCents
+            : null,
+        isPrimary: item?.isPrimary ?? index === 0,
+      }));
+    }
+    if (invoice?.description) {
+      return [
+        {
+          id: "primary",
+          description: invoice.description,
+          amountCents:
+            typeof invoice?.amountCents === "number" &&
+            Number.isFinite(invoice.amountCents)
+              ? invoice.amountCents
+              : null,
+          isPrimary: true,
+        },
+      ];
+    }
+    return [
+      {
+        id: "primary",
+        description: "",
+        amountCents:
+          typeof invoice?.amountCents === "number" &&
+          Number.isFinite(invoice.amountCents)
+            ? invoice.amountCents
+            : null,
+        isPrimary: true,
+      },
+    ];
+  }, [invoice]);
+
+  const totalCents = React.useMemo(() => {
+    if (
+      typeof invoice?.amountCents === "number" &&
+      Number.isFinite(invoice.amountCents)
+    ) {
+      return invoice.amountCents;
+    }
+    return invoiceLineItems.reduce(
+      (sum, item) =>
+        sum + (typeof item.amountCents === "number" ? item.amountCents : 0),
+      0
+    );
+  }, [invoice, invoiceLineItems]);
+
   const enableOklchFallback = React.useCallback(() => {
     if (typeof window === "undefined" || typeof document === "undefined") {
       return () => {};
     }
+
     const originalGetComputedStyle = window.getComputedStyle;
 
     const convertOklchToRgb = (input) => {
@@ -106,7 +165,9 @@ export default function InvoicePreview({ company, user, client, invoice }) {
             const bound = value.bind(target);
             return (...fnArgs) => {
               const result = bound(...fnArgs);
-              return typeof result === "string" ? convertOklchToRgb(result) : result;
+              return typeof result === "string"
+                ? convertOklchToRgb(result)
+                : result;
             };
           }
           return typeof value === "string" ? convertOklchToRgb(value) : value;
@@ -130,6 +191,8 @@ export default function InvoicePreview({ company, user, client, invoice }) {
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
+        ignoreElements: (element) =>
+          element?.dataset?.html2canvasIgnore === "true",
       });
 
       const imgData = canvas.toDataURL("image/png");
@@ -146,11 +209,17 @@ export default function InvoicePreview({ company, user, client, invoice }) {
       const x = (pageWidth - imgWidth) / 2;
       const y = (pageHeight - imgHeight) / 2;
 
-      pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight, undefined, "FAST");
+      pdf.addImage(
+        imgData,
+        "PNG",
+        x,
+        y,
+        imgWidth,
+        imgHeight,
+        undefined,
+        "FAST"
+      );
 
-      const invoiceNumber = invoice?.invoiceNumber
-        ? String(invoice.invoiceNumber).trim()
-        : "";
       const filename = invoiceNumber
         ? `Invoice ${invoiceNumber}.pdf`
         : "Invoice Preview.pdf";
@@ -173,40 +242,58 @@ export default function InvoicePreview({ company, user, client, invoice }) {
         >
           Invoice Preview
         </div>
-  
 
-      
-
-      
-       <div className="mb-4">
+        <div className="mb-4">
           <div className="font-bold text-lg">{businessName}</div>
           {street && <div>{street}</div>}
           {cityStateZip && <div>{cityStateZip}</div>}
           {phone && <div>{phone}</div>}
-          </div>
-          <div className="flex justify-between text-sm mb-4">
+        </div>
+        
+        <div className="flex justify-between text-sm mb-4">
           <div>
             <div className="text-gray-600">Invoice #</div>
-            <div className="font-semibold">{invoice?.invoiceNumber || "TBD"}</div>
+            <div className="font-semibold">
+              {invoiceNumber || (
+                <span className="text-gray-400" data-html2canvas-ignore="true">
+                  TBD
+                </span>
+              )}
+            </div>
           </div>
           <div>
             <div className="text-gray-600">Date</div>
-            <div className="font-semibold">{formatDate(invoice?.invoiceDate)}</div>
+            <div className="font-semibold">
+              {formattedInvoiceDate || (
+                <span className="text-gray-400" data-html2canvas-ignore="true">
+                  —
+                </span>
+              )}
+            </div>
           </div>
         </div>
-      
 
         <hr className="my-3" />
-      <div className="text-sm mb-3">
+        <div className="text-sm mb-3">
           <div className="font-semibold">Bill To</div>
-          <div className="font-medium">{client?.name || "—"}</div>
+          <div className="font-medium">
+            {client?.name ? (
+              client.name
+            ) : (
+              <span className="text-gray-400" data-html2canvas-ignore="true">
+                —
+              </span>
+            )}
+          </div>
+        
           <div className="text-gray-600 whitespace-pre-line">
-            {client?.address || ""}</div>
+            {client?.address || ""}
+          </div>
           {client?.paymentTermsDays && (
             <div className="text-gray-500 mt-1">Terms: Net {client.paymentTermsDays}</div>
           )}
         </div>
-       <div
+        <div
           className="text-sm mb-4"
           data-html2canvas-ignore={loadRef ? undefined : "true"}
         >
@@ -218,7 +305,7 @@ export default function InvoicePreview({ company, user, client, invoice }) {
           )}
         </div>
 
-        <table className="w-full text-sm">
+<table className="w-full text-sm">
           <thead>
             <tr className="border-b">
               <th className="text-left py-1">Description</th>
@@ -226,27 +313,68 @@ export default function InvoicePreview({ company, user, client, invoice }) {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td className="py-1 align-top">
-                {invoice?.description || (
-                  <span className="text-gray-400">Describe the load…</span>
-                )}
-              </td>
-              <td className="py-1 text-right align-top">{currency(amountCents)}</td>
-            </tr>
+            {invoiceLineItems.map((item, index) => {
+              const amount =
+                typeof item.amountCents === "number" &&
+                Number.isFinite(item.amountCents)
+                  ? item.amountCents
+                  : 0;
+              const hasDescription = Boolean(item.description);
+              const hasAmount = amount > 0;
+              const hideRow = !item.isPrimary && !hasDescription && !hasAmount;
+              if (hideRow) return null;
+
+              return (
+                <tr key={item.id || index}>
+                  <td className="py-1 align-top">
+                    {hasDescription ? (
+                      item.description
+                    ) : (
+                      <span
+                        className="text-gray-400"
+                        data-html2canvas-ignore="true"
+                      >
+                        {item.isPrimary
+                          ? "Describe the load…"
+                          : "Add a description"}
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-1 text-right align-top">
+                    {currency(amount)}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
           <tfoot className="border-t font-semibold">
             <tr>
               <td className="text-right py-1">Total</td>
-              <td className="text-right py-1">{currency(amountCents)}</td>
+              <td className="text-right py-1">{currency(totalCents)}</td>
             </tr>
           </tfoot>
         </table>
 
         <p className="mt-6 text-xs text-gray-500 italic">
-          Make payments to {businessName}. Feel free to reach out to {" "}
-          {contactName || "your contact"}
-          {phone ? ` @ ${phone}` : ""}.
+          Make payments to {businessName}.
+          {hasContactName || hasPhone ? (
+            <>
+              {" "}
+              Feel free to reach out to {" "}
+              {hasContactName ? contactName : null}
+              {hasContactName && hasPhone ? ` @ ${phone}` : null}
+              {!hasContactName && hasPhone ? `at ${phone}` : null} 
+              {" "}for any inquiries or concerns.
+            </>
+          ) : (
+            <span
+              className="text-gray-400"
+              data-html2canvas-ignore="true"
+            >
+              {" "}
+              Feel free to reach out to your contact.
+            </span>
+          )}
         </p>
       </div>
 
@@ -261,7 +389,6 @@ export default function InvoicePreview({ company, user, client, invoice }) {
           Download PDF
         </button>
       </div>
-      
     </div>
   );
 }

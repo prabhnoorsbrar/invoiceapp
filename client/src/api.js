@@ -112,6 +112,9 @@ export const api = {
   listClients() {
     return request(`/api/clients`);
   },
+  createClient(payload) {
+    return request(`/api/clients`, { method: "POST", body: payload });
+  },
 
   // Routes (for preset picker later)
   listRoutesByClient(clientId) {
