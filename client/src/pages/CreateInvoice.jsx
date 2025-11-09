@@ -9,9 +9,12 @@ const defaultClientFormState = {
   address: "",
   emailTo: "",
   paymentTermsDays: 30,
-  routeName: "",
-  routeDescription: "",
-  routeAmount: "",
+  };
+
+const defaultRouteFormState = {
+  name: "",
+  description: "",
+  amount: "",
 };
 
 function parseAmountToCents(value) {
@@ -30,6 +33,13 @@ function parseAmountToCents(value) {
 function centsToInputValue(cents) {
   if (typeof cents !== "number") return "";
   return (cents / 100).toFixed(2);
+}
+function sortRoutesByLabel(list = []) {
+  return [...list].sort((a, b) => {
+    const aLabel = (a?.descriptionTemplate || a?.name || "").toLowerCase();
+    const bLabel = (b?.descriptionTemplate || b?.name || "").toLowerCase();
+    return aLabel.localeCompare(bLabel);
+  });
 }
 
 function createLineItem(overrides = {}) {
@@ -80,6 +90,9 @@ export default function CreateInvoice({ company, currentUser }) {
   const [showClientModal, setShowClientModal] = useState(false);
   const [clientForm, setClientForm] = useState(defaultClientFormState);
   const [savingClient, setSavingClient] = useState(false);
+  const [showRouteModal, setShowRouteModal] = useState(false);
+  const [routeForm, setRouteForm] = useState(defaultRouteFormState);
+  const [savingRoute, setSavingRoute] = useState(false);
   useEffect(() => {
     (async () => {
       const list = await api.listClients();
@@ -92,7 +105,7 @@ export default function CreateInvoice({ company, currentUser }) {
     if (!selectedClient?._id) return;
     (async () => {
       const r = await api.listRoutesByClient(selectedClient._id);
-      setRoutes(r);
+      setRoutes(sortRoutesByLabel(r));
     })();
   }, [selectedClient]);
   const nextInvoiceNumber = useMemo(
@@ -149,6 +162,8 @@ export default function CreateInvoice({ company, currentUser }) {
     setSelectedRoute(null);
     setRoutes([]);
     resetLineItems();
+    setShowRouteModal(false);
+    setRouteForm(defaultRouteFormState);
     setStep(2);
   }
 
@@ -290,21 +305,7 @@ export default function CreateInvoice({ company, currentUser }) {
       .map((part) => part.trim())
       .filter(Boolean);
 
-    const trimmedRouteName = clientForm.routeName.trim();
-    const trimmedRouteDescription = clientForm.routeDescription.trim();
-    const routeAmountCents = parseAmountToCents(clientForm.routeAmount);
-    const wantsRoute = Boolean(
-      trimmedRouteName || trimmedRouteDescription || routeAmountCents
-    );
-
-    if (wantsRoute && !trimmedRouteName && !trimmedRouteDescription) {
-      alert("Provide a route name or description for the new bill-to.");
-      return;
-    }
-    if (wantsRoute && (!routeAmountCents || routeAmountCents <= 0)) {
-      alert("Enter a base amount greater than $0.00 for the new route.");
-      return;
-    }
+    
 
     setSavingClient(true);
     try {
@@ -321,28 +322,72 @@ export default function CreateInvoice({ company, currentUser }) {
         [...prev, newClient].sort((a, b) => a.name.localeCompare(b.name))
       );
 
-      let createdRoute = null;
-      if (wantsRoute) {
-        createdRoute = await api.createRoutePreset({
-          clientId: newClient._id,
-          name: trimmedRouteName || trimmedRouteDescription,
-          descriptionTemplate:
-            trimmedRouteDescription || trimmedRouteName || "",
-          baseAmountCents: routeAmountCents,
-        });
-      }
+     
 
       closeClientModal();
       handleClientSelect(newClient);
-      if (createdRoute) {
-        setRoutes([createdRoute]);
-        handleRouteSelect(createdRoute);
-      }
+      
     } catch (err) {
       console.error(err);
       alert(err.message || "Failed to create bill-to");
     } finally {
       setSavingClient(false);
+    }
+  }
+  function openRouteModal() {
+    if (!selectedClient?._id) {
+      alert("Select a bill-to client before adding a route.");
+      return;
+    }
+    setRouteForm(defaultRouteFormState);
+    setShowRouteModal(true);
+  }
+
+  function closeRouteModal() {
+    setShowRouteModal(false);
+    setRouteForm(defaultRouteFormState);
+  }
+
+  function handleRouteFormChange(field, value) {
+    setRouteForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function handleRouteCreate(event) {
+    event.preventDefault();
+    if (savingRoute || !selectedClient?._id) return;
+
+    const name = routeForm.name.trim();
+    const description = routeForm.description.trim();
+    const amountCents = parseAmountToCents(routeForm.amount);
+
+    if (!name && !description) {
+      alert("Provide a name or description for the route.");
+      return;
+    }
+
+    if (!amountCents || amountCents <= 0) {
+      alert("Enter an amount greater than $0.00 for the route.");
+      return;
+    }
+
+    setSavingRoute(true);
+    try {
+      const createdRoute = await api.createRoutePreset({
+        clientId: selectedClient._id,
+        name: name || description,
+        descriptionTemplate: description || name || "",
+        baseAmountCents: amountCents,
+      });
+
+      setRoutes((prev) => sortRoutesByLabel([...prev, createdRoute]));
+
+      closeRouteModal();
+      handleRouteSelect(createdRoute);
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to create route");
+    } finally {
+      setSavingRoute(false);
     }
   }
 
@@ -363,10 +408,9 @@ export default function CreateInvoice({ company, currentUser }) {
                   className="btn btn-sm btn-outline"
                   onClick={() => setShowClientModal(true)}
                 >
-                  
                   + Add
                 </button>
-              
+
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
                 {clients.map((client) => (
@@ -388,8 +432,20 @@ export default function CreateInvoice({ company, currentUser }) {
 
           {step === 2 && (
             <div>
-              <h1 className="text-xl font-semibold mb-2">Pick a Route</h1>
+              <div className="flex items-center justify-between mb-2">
+                <h1 className="text-xl font-semibold">Pick a Route</h1>
+                <button className="btn btn-sm btn-outline" onClick={openRouteModal}>
+                  + Add Route
+                </button>
+              </div>
               <div className="space-y-3">
+                {routes.length === 0 && (
+                  <div className="rounded-xl border border-dashed p-6 text-center text-sm text-gray-500">
+                    {selectedClient
+                      ? `No routes found for ${selectedClient.name}. Add a new route to continue.`
+                      : "Select a bill-to to manage routes."}
+                  </div>
+                )}
                 {routes.map((route) => {
                   const latest = Array.isArray(route.prices)
                     ? [...route.prices].sort(
@@ -662,7 +718,7 @@ export default function CreateInvoice({ company, currentUser }) {
        {showClientModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="max-h-full w-full max-w-2xl overflow-y-auto">
-            <div className="relative w-full bg-white rounded-xl shadow-xl p-6">
+            <div className="relative w-full rounded-xl bg-white p-6 text-gray-900 shadow-xl">
               <button
                 className="btn btn-sm btn-ghost absolute top-3 right-3"
                 onClick={closeClientModal}
@@ -673,20 +729,20 @@ export default function CreateInvoice({ company, currentUser }) {
               <form className="space-y-4" onSubmit={handleClientCreate}>
                 <div className="grid md:grid-cols-2 gap-4">
                   <label className="form-control">
-                    <span className="label-text">Client name</span>
+                    <span className="text-sm font-medium text-gray-700">Client name</span>
                     <input
-                      className="input input-bordered"
+                      className="input input-bordered text-gray-900"
                       value={clientForm.name}
                       onChange={(e) => handleClientFormChange("name", e.target.value)}
                       required
                     />
                   </label>
                   <label className="form-control">
-                    <span className="label-text">Payment terms (days)</span>
+                    <span className="text-sm font-medium text-gray-700">Payment terms (days)</span>
                     <input
                       type="number"
                       min={0}
-                      className="input input-bordered"
+                      className="input input-bordered text-gray-900"
                       value={clientForm.paymentTermsDays}
                       onChange={(e) =>
                         handleClientFormChange("paymentTermsDays", e.target.value)
@@ -695,64 +751,29 @@ export default function CreateInvoice({ company, currentUser }) {
                   </label>
                 </div>
                 <label className="form-control">
-                  <span className="label-text">Billing address</span>
+                  <span className="text-sm font-medium text-gray-700">Billing address</span>
                   <textarea
-                    className="textarea textarea-bordered"
+                    className="textarea textarea-bordered text-gray-900"
                     rows={3}
                     value={clientForm.address}
                     onChange={(e) => handleClientFormChange("address", e.target.value)}
                   />
                 </label>
                 <label className="form-control">
-                  <span className="label-text">Invoice emails (comma separated)</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    Invoice emails (comma separated)
+                  </span>
                   <textarea
-                    className="textarea textarea-bordered"
+                    className="textarea textarea-bordered text-gray-900"
                     rows={2}
                     value={clientForm.emailTo}
                     onChange={(e) => handleClientFormChange("emailTo", e.target.value)}
                   />
                 </label>
+                <p className="text-sm text-gray-500">
+                  After saving the bill-to you'll be prompted to add or pick a route.
+                </p>
 
-                <div className="divider">Default Route</div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <label className="form-control">
-                    <span className="label-text">Route name</span>
-                    <input
-                      className="input input-bordered"
-                      placeholder="Chicago ➝ Dallas"
-                      value={clientForm.routeName}
-                      onChange={(e) => handleClientFormChange("routeName", e.target.value)}
-                    />
-                  </label>
-                  <label className="form-control">
-                    <span className="label-text">Base amount (USD)</span>
-                    <input
-                      className="input input-bordered"
-                      type="number"
-                      inputMode="decimal"
-                      step="0.01"
-                      placeholder="1200.00"
-                      value={clientForm.routeAmount}
-                      onChange={(e) =>
-                        handleClientFormChange("routeAmount", e.target.value)
-                      }
-                    />
-                  </label>
-                </div>
-                <label className="form-control">
-                  <span className="label-text">Route description</span>
-                  <textarea
-                    className="textarea textarea-bordered"
-                    rows={3}
-                    placeholder="Linehaul from Chicago to Dallas"
-                    value={clientForm.routeDescription}
-                    onChange={(e) =>
-                      handleClientFormChange("routeDescription", e.target.value)
-                    }
-                  />
-                </label>
-              
                 <div className="flex justify-end gap-3 pt-2">
                   <button
                     type="button"
@@ -764,6 +785,73 @@ export default function CreateInvoice({ company, currentUser }) {
                   </button>
                   <button type="submit" className="btn btn-primary" disabled={savingClient}>
                     {savingClient ? "Saving…" : "Save Bill-To"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+       </div>
+      )}
+      {showRouteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="max-h-full w-full max-w-xl overflow-y-auto">
+            <div className="relative w-full rounded-xl bg-white p-6 text-gray-900 shadow-xl">
+              <button
+                className="btn btn-sm btn-ghost absolute top-3 right-3"
+                onClick={closeRouteModal}
+              >
+                ✕
+              </button>
+              <h2 className="text-xl font-semibold mb-4">Add Route</h2>
+              <form className="space-y-4" onSubmit={handleRouteCreate}>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <label className="form-control">
+                    <span className="text-sm font-medium text-gray-700">Route name</span>
+                    <input
+                      className="input input-bordered text-gray-900"
+                      placeholder="Chicago ➝ Dallas"
+                      value={routeForm.name}
+                      onChange={(e) => handleRouteFormChange("name", e.target.value)}
+                    />
+                  </label>
+                  <label className="form-control">
+                    <span className="text-sm font-medium text-gray-700">Amount (USD)</span>
+                    <input
+                      className="input input-bordered text-gray-900"
+                      type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      placeholder="1200.00"
+                      value={routeForm.amount}
+                      onChange={(e) => handleRouteFormChange("amount", e.target.value)}
+                      required
+                    />
+                  </label>
+                </div>
+                <label className="form-control">
+                  <span className="text-sm font-medium text-gray-700">Description</span>
+                  <textarea
+                    className="textarea textarea-bordered text-gray-900"
+                    rows={3}
+                    placeholder="Linehaul from Chicago to Dallas"
+                    value={routeForm.description}
+                    onChange={(e) => handleRouteFormChange("description", e.target.value)}
+                  />
+                </label>
+              
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={closeRouteModal}
+                    disabled={savingRoute}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={savingRoute}>
+                    {savingRoute ? "Saving…" : "Save Route"}
                   </button>
                 </div>
               </form>
