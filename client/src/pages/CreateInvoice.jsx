@@ -9,9 +9,12 @@ const defaultClientFormState = {
   address: "",
   emailTo: "",
   paymentTermsDays: 30,
-  routeName: "",
-  routeDescription: "",
-  routeAmount: "",
+};
+
+const defaultRouteFormState = {
+  name: "",
+  description: "",
+  amount: "",
 };
 
 function parseAmountToCents(value) {
@@ -30,6 +33,14 @@ function parseAmountToCents(value) {
 function centsToInputValue(cents) {
   if (typeof cents !== "number") return "";
   return (cents / 100).toFixed(2);
+}
+
+function sortRoutesByLabel(list = []) {
+  return [...list].sort((a, b) => {
+    const aLabel = (a?.descriptionTemplate || a?.name || "").toLowerCase();
+    const bLabel = (b?.descriptionTemplate || b?.name || "").toLowerCase();
+    return aLabel.localeCompare(bLabel);
+  });
 }
 
 function createLineItem(overrides = {}) {
@@ -80,6 +91,9 @@ export default function CreateInvoice({ company, currentUser }) {
   const [showClientModal, setShowClientModal] = useState(false);
   const [clientForm, setClientForm] = useState(defaultClientFormState);
   const [savingClient, setSavingClient] = useState(false);
+  const [showRouteModal, setShowRouteModal] = useState(false);
+  const [routeForm, setRouteForm] = useState(defaultRouteFormState);
+  const [savingRoute, setSavingRoute] = useState(false);
   useEffect(() => {
     (async () => {
       const list = await api.listClients();
@@ -92,7 +106,7 @@ export default function CreateInvoice({ company, currentUser }) {
     if (!selectedClient?._id) return;
     (async () => {
       const r = await api.listRoutesByClient(selectedClient._id);
-      setRoutes(r);
+      setRoutes(sortRoutesByLabel(r));
     })();
   }, [selectedClient]);
   const nextInvoiceNumber = useMemo(
@@ -149,6 +163,8 @@ export default function CreateInvoice({ company, currentUser }) {
     setSelectedRoute(null);
     setRoutes([]);
     resetLineItems();
+    setShowRouteModal(false);
+    setRouteForm(defaultRouteFormState);
     setStep(2);
   }
 
@@ -290,22 +306,6 @@ export default function CreateInvoice({ company, currentUser }) {
       .map((part) => part.trim())
       .filter(Boolean);
 
-    const trimmedRouteName = clientForm.routeName.trim();
-    const trimmedRouteDescription = clientForm.routeDescription.trim();
-    const routeAmountCents = parseAmountToCents(clientForm.routeAmount);
-    const wantsRoute = Boolean(
-      trimmedRouteName || trimmedRouteDescription || routeAmountCents
-    );
-
-    if (wantsRoute && !trimmedRouteName && !trimmedRouteDescription) {
-      alert("Provide a route name or description for the new bill-to.");
-      return;
-    }
-    if (wantsRoute && (!routeAmountCents || routeAmountCents <= 0)) {
-      alert("Enter a base amount greater than $0.00 for the new route.");
-      return;
-    }
-
     setSavingClient(true);
     try {
       const newClient = await api.createClient({
@@ -320,24 +320,8 @@ export default function CreateInvoice({ company, currentUser }) {
       setClients((prev) =>
         [...prev, newClient].sort((a, b) => a.name.localeCompare(b.name))
       );
-
-      let createdRoute = null;
-      if (wantsRoute) {
-        createdRoute = await api.createRoutePreset({
-          clientId: newClient._id,
-          name: trimmedRouteName || trimmedRouteDescription,
-          descriptionTemplate:
-            trimmedRouteDescription || trimmedRouteName || "",
-          baseAmountCents: routeAmountCents,
-        });
-      }
-
       closeClientModal();
       handleClientSelect(newClient);
-      if (createdRoute) {
-        setRoutes([createdRoute]);
-        handleRouteSelect(createdRoute);
-      }
     } catch (err) {
       console.error(err);
       alert(err.message || "Failed to create bill-to");
@@ -346,50 +330,217 @@ export default function CreateInvoice({ company, currentUser }) {
     }
   }
 
+  function openRouteModal() {
+    if (!selectedClient?._id) {
+      alert("Select a bill-to client before adding a route.");
+      return;
+    }
+    setRouteForm(defaultRouteFormState);
+    setShowRouteModal(true);
+  }
+
+  function closeRouteModal() {
+    setShowRouteModal(false);
+    setRouteForm(defaultRouteFormState);
+  }
+
+  function handleRouteFormChange(field, value) {
+    setRouteForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function handleRouteCreate(event) {
+    event.preventDefault();
+    if (savingRoute || !selectedClient?._id) return;
+
+    const name = routeForm.name.trim();
+    const description = routeForm.description.trim();
+    const amountCents = parseAmountToCents(routeForm.amount);
+
+    if (!name && !description) {
+      alert("Provide a name or description for the route.");
+      return;
+    }
+
+    if (!amountCents || amountCents <= 0) {
+      alert("Enter an amount greater than $0.00 for the route.");
+      return;
+    }
+
+    setSavingRoute(true);
+    try {
+      const createdRoute = await api.createRoutePreset({
+        clientId: selectedClient._id,
+        name: name || description,
+        descriptionTemplate: description || name || "",
+        baseAmountCents: amountCents,
+      });
+
+      setRoutes((prev) => sortRoutesByLabel([...prev, createdRoute]));
+
+      closeRouteModal();
+      handleRouteSelect(createdRoute);
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to create route");
+    } finally {
+      setSavingRoute(false);
+    }
+  }
+
   const allowPrimaryAmountEdit = overridePrice || routeAmountCents === null;
   const allowPrimaryDescriptionEdit =
     overrideDescription || !routeDescription;
 
+  const stepsConfig = [
+    {
+      id: 1,
+      label: "Bill-To",
+      description: "Choose the customer you'll invoice",
+    },
+    {
+      id: 2,
+      label: "Route",
+      description: "Select or add the haul details",
+    },
+    {
+      id: 3,
+      label: "Review",
+      description: "Finalize amounts & send",
+    },
+  ];
+
   return (
-    
-    <div className="relative">
-      <div className="grid lg:grid-cols-[1fr_420px] gap-6">
-        <section className="space-y-6">
-          {step === 1 && (
+    <div className="relative min-h-screen bg-slate-950 text-slate-100">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.16),_transparent_45%),_radial-gradient(circle_at_bottom,_rgba(30,64,175,0.22),_transparent_55%)]"
+      ></div>
+      <div className="mx-auto w-full max-w-6xl space-y-8 px-4 pb-12 pt-10">
+        <header className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-slate-900/60 p-6 backdrop-blur">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <h1 className="text-xl font-semibold">Pick a Bill-To</h1>
+              <p className="text-sm uppercase tracking-[0.2em] text-sky-300/80">
+                Invoice Builder
+              </p>
+              <h1 className="mt-1 text-3xl font-semibold">Create a new invoice</h1>
+              <p className="mt-1 max-w-2xl text-sm text-slate-300">
+                Flow through a guided setup to select the bill-to, attach the correct
+                route, and polish the invoice details before sharing a polished PDF.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-slate-800/70 px-5 py-3 text-right">
+              <p className="text-xs uppercase tracking-widest text-slate-400">
+                Next invoice #
+              </p>
+              <p className="text-2xl font-semibold text-sky-300">{nextInvoiceNumber}</p>
+            </div>
+          </div>
+
+          <nav className="flex flex-wrap gap-3">
+            {stepsConfig.map((meta) => {
+              const isActive = step === meta.id;
+              const isComplete = step > meta.id;
+              return (
+                <div
+                  key={meta.id}
+                  className={`group flex flex-1 min-w-[200px] items-center gap-3 rounded-2xl border px-4 py-3 transition-all ${
+                    isActive
+                      ? "border-sky-400/60 bg-sky-400/10 shadow-[0_0_0_1px_rgba(56,189,248,0.25)]"
+                      : isComplete
+                      ? "border-emerald-400/40 bg-emerald-400/10"
+                      : "border-white/10 bg-white/5"
+                  }`}
+                >
+                  <span
+                    className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ${
+                      isActive
+                        ? "bg-sky-500 text-slate-950"
+                        : isComplete
+                        ? "bg-emerald-500 text-slate-950"
+                        : "bg-white/10 text-slate-300"
+                    }`}
+                  >
+                    {meta.id}
+                  </span>
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium">
+                      {meta.label}
+                      {isComplete && <span className="ml-2 text-xs text-emerald-300">Done</span>}
+                    </p>
+                    <p className="text-xs text-slate-400">{meta.description}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </nav>
+        </header>
+
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
+          <section className="space-y-6">
+          {step === 1 && (
+            <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-slate-950/40 backdrop-blur">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-2xl font-semibold">Pick a Bill-To</h2>
+                  <p className="text-sm text-slate-400">
+                    Choose an existing client or add a new one to start this invoice.
+                  </p>
+                </div>
                 <button
-                  className="btn btn-sm btn-outline"
+                  className="btn btn-sm border-sky-400/60 bg-sky-500/20 text-sky-200 hover:border-sky-400 hover:bg-sky-500/40"
                   onClick={() => setShowClientModal(true)}
                 >
-                  
-                  + Add
+                  + New Bill-To
                 </button>
-              
               </div>
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {clients.map((client) => (
                   <button
                     key={client._id}
                     onClick={() => handleClientSelect(client)}
-                    className="p-4 border rounded-xl text-left hover:shadow"
+                    className="group rounded-2xl border border-white/10 bg-white/5 p-5 text-left transition hover:-translate-y-0.5 hover:border-sky-400/60 hover:bg-sky-500/10 hover:shadow-lg hover:shadow-sky-900/40"
                   >
-                    <div className="font-medium">{client.name}</div>
-                    <div className="text-sm text-gray-500 whitespace-pre-line">
-                      {client.address}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-lg font-medium text-slate-50">{client.name}</div>
+                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300 transition group-hover:border-sky-400/60 group-hover:bg-sky-500/20 group-hover:text-sky-100">
+                        Select
+                      </span>
                     </div>
+                    {client.address && (
+                      <div className="mt-3 text-sm text-slate-400 whitespace-pre-line">
+                        {client.address}
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
             </div>
-         
           )}
 
           {step === 2 && (
-            <div>
-              <h1 className="text-xl font-semibold mb-2">Pick a Route</h1>
-              <div className="space-y-3">
+            <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-slate-950/40 backdrop-blur">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-2xl font-semibold">Pick a Route</h2>
+                  <p className="text-sm text-slate-400">
+                    Suggested pricing auto-fills from your saved presets. You can still override it later.
+                  </p>
+                </div>
+                <button
+                  className="btn btn-sm border-sky-400/60 bg-sky-500/20 text-sky-200 hover:border-sky-400 hover:bg-sky-500/40"
+                  onClick={openRouteModal}
+                >
+                  + Add Route
+                </button>
+              </div>
+              <div className="space-y-4">
+                {routes.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-white/20 bg-white/5 p-8 text-center text-sm text-slate-300">
+                    {selectedClient
+                      ? `No routes found for ${selectedClient.name}. Add a new route to continue.`
+                      : "Select a bill-to to manage routes."}
+                  </div>
+                )}
                 {routes.map((route) => {
                   const latest = Array.isArray(route.prices)
                     ? [...route.prices].sort(
@@ -401,20 +552,43 @@ export default function CreateInvoice({ company, currentUser }) {
                     <button
                       key={route._id}
                       onClick={() => handleRouteSelect(route)}
-                      className="w-full text-left border p-4 rounded-xl hover:shadow"
+                      className="group w-full rounded-2xl border border-white/10 bg-white/5 p-5 text-left transition hover:-translate-y-0.5 hover:border-sky-400/60 hover:bg-sky-500/10 hover:shadow-lg hover:shadow-sky-900/40"
                     >
-                      <div className="text-sm font-medium mb-1">
-                        {route.descriptionTemplate || route.name}
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <div className="text-lg font-semibold text-slate-50">
+                            {route.descriptionTemplate || route.name}
+                          </div>
+                          {route.name && route.descriptionTemplate && (
+                            <div className="text-xs uppercase tracking-widest text-slate-400">
+                              {route.name}
+                            </div>
+                          )}
+                        </div>
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300 transition group-hover:border-sky-400/60 group-hover:bg-sky-500/20 group-hover:text-sky-100">
+                          Use route
+                        </span>
                       </div>
-                      <div className="text-sm text-gray-500">
-                        {latest?.amountCents
-                          ? `Suggested: $${(latest.amountCents / 100).toFixed(2)}`
-                          : "No price listed"}
+                      <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-300">
+                        <span className="flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-emerald-400/80" />
+                          {latest?.amountCents
+                            ? `Suggested ${`$${(latest.amountCents / 100).toFixed(2)}`}`
+                            : "No price listed"}
+                        </span>
+                        {latest?.effectiveFrom && (
+                          <span className="text-xs text-slate-400">
+                            Updated {new Date(latest.effectiveFrom).toLocaleDateString()}
+                          </span>
+                        )}
                       </div>
                     </button>
                   );
                 })}
-                <button className="btn btn-ghost mt-3" onClick={() => setStep(1)}>
+                <button
+                  className="btn btn-ghost mt-2 text-slate-300 hover:bg-white/10"
+                  onClick={() => setStep(1)}
+                >
                   ← Back to Bill-To
                 </button>
               </div>
@@ -422,45 +596,59 @@ export default function CreateInvoice({ company, currentUser }) {
           )}
 
           {step === 3 && (
-            <div className="space-y-4">
-              <h1 className="text-xl font-semibold">Finalize Invoice</h1>
-
-              <div className="form-control">
-                <label className="label">Invoice #</label>
-                <input
-                  className="input input-bordered"
-                  value={invoiceNumber}
-                  onChange={(e) => setInvoiceNumber(e.target.value)}
-                />
+            <div className="space-y-6 rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-slate-950/40 backdrop-blur">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-2xl font-semibold">Finalize Invoice</h2>
+                  <p className="text-sm text-slate-400">
+                    Review the invoice metadata and adjust the descriptions or line items before saving.
+                  </p>
+                </div>
+                <button
+                  className="btn btn-sm border-white/20 bg-white/5 text-slate-200 hover:border-emerald-400/60 hover:bg-emerald-500/20 hover:text-emerald-100"
+                  onClick={() => setStep(2)}
+                >
+                  ← Back to Route
+                </button>
               </div>
 
-              <div className="form-control">
-                <label className="label">Invoice Date</label>
-                <input
-                  type="date"
-                  className="input input-bordered"
-                  value={invoiceDate}
-                  onChange={(e) => setInvoiceDate(e.target.value)}
-                />
+              <div className="grid gap-4 md:grid-cols-3">
+                <label className="form-control">
+                  <span className="text-xs uppercase tracking-widest text-slate-400">Invoice #</span>
+                  <input
+                    className="input input-bordered border-white/10 bg-slate-900/80 text-slate-100"
+                    value={invoiceNumber}
+                    onChange={(e) => setInvoiceNumber(e.target.value)}
+                  />
+                </label>
+                <label className="form-control">
+                  <span className="text-xs uppercase tracking-widest text-slate-400">Invoice Date</span>
+                  <input
+                    type="date"
+                    className="input input-bordered border-white/10 bg-slate-900/80 text-slate-100"
+                    value={invoiceDate}
+                    onChange={(e) => setInvoiceDate(e.target.value)}
+                  />
+                </label>
+                <label className="form-control">
+                  <span className="text-xs uppercase tracking-widest text-slate-400">Load / Ref #</span>
+                  <input
+                    className="input input-bordered border-white/10 bg-slate-900/80 text-slate-100"
+                    value={loadRef}
+                    onChange={(e) => setLoadRef(e.target.value)}
+                    placeholder="Optional"
+                  />
+                </label>
               </div>
 
-              <div className="form-control">
-                <label className="label">Load / Ref #</label>
-                <input
-                  className="input input-bordered"
-                  value={loadRef}
-                  onChange={(e) => setLoadRef(e.target.value)}
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label justify-between">
-                  <span>Main Description</span>
-                  <label className="label cursor-pointer p-0 gap-2">
-                    <span className="text-xs text-base-content/60">Manual</span>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="text-sm font-medium text-slate-200">Main Description</span>
+                  <label className="flex items-center gap-2 text-xs text-slate-300">
+                    <span>Manual override</span>
                     <input
                       type="checkbox"
-                      className="toggle toggle-sm"
+                      className="toggle toggle-xs"
                       checked={overrideDescription}
                       onChange={(e) => {
                         const checked = e.target.checked;
@@ -473,9 +661,9 @@ export default function CreateInvoice({ company, currentUser }) {
                       }}
                     />
                   </label>
-                </label>
+                </div>
                 <textarea
-                  className="textarea textarea-bordered"
+                  className="mt-4 textarea textarea-bordered border-white/10 bg-slate-900/80 text-slate-100"
                   placeholder="Describe the load…"
                   value={primaryItem.description || ""}
                   onChange={(e) =>
@@ -488,14 +676,14 @@ export default function CreateInvoice({ company, currentUser }) {
                 />
               </div>
 
-              <div className="form-control">
-                <label className="label justify-between">
-                  <span>Main Amount (USD)</span>
-                  <label className="label cursor-pointer p-0 gap-2">
-                    <span className="text-xs text-base-content/60">Manual</span>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="text-sm font-medium text-slate-200">Main Amount (USD)</span>
+                  <label className="flex items-center gap-2 text-xs text-slate-300">
+                    <span>Manual override</span>
                     <input
                       type="checkbox"
-                      className="toggle toggle-sm"
+                      className="toggle toggle-xs"
                       checked={overridePrice}
                       onChange={(e) => {
                         const checked = e.target.checked;
@@ -513,12 +701,14 @@ export default function CreateInvoice({ company, currentUser }) {
                       }}
                     />
                   </label>
-                </label>
+                </div>
                 <input
                   type="number"
                   inputMode="decimal"
                   step="0.01"
-                  className="input input-bordered"
+                  className={`mt-4 input input-bordered border-white/10 bg-slate-900/80 text-slate-100 ${
+                    allowPrimaryAmountEdit ? "" : "bg-slate-800/60"
+                  }`}
                   placeholder="1200.00"
                   value={
                     typeof primaryItem.amountInput === "string"
@@ -530,39 +720,41 @@ export default function CreateInvoice({ company, currentUser }) {
                 />
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-lg font-semibold">Additional Line Items</h2>
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-100">Additional Line Items</h3>
+                    <p className="text-sm text-slate-400">
+                      Capture accessorials like detention, fuel, or lumper fees so the total stays accurate.
+                    </p>
+                  </div>
                   <button
                     type="button"
-                    className="btn btn-sm btn-outline"
+                    className="btn btn-sm border-dashed border-sky-400/60 bg-transparent text-sky-200 hover:border-sky-400 hover:bg-sky-500/10"
                     onClick={handleAddLineItem}
                   >
                     + Add line item
                   </button>
                 </div>
 
-                {extraItems.length === 0 && (
-                  <p className="text-sm text-base-content/60">
-                    Need detention or fuel adjustments? Add them here and
-                    we&apos;ll include them in the total.
-                  </p>
-                )}
+                <div className="mt-5 space-y-4">
+                  {extraItems.length === 0 && (
+                    <p className="text-sm text-slate-400">
+                      Nothing extra yet. Add a line item if you need to tack on miscellaneous charges.
+                    </p>
+                  )}
 
-                <div className="space-y-3 mt-3">
                   {extraItems.map((item, idx) => (
                     <div
                       key={item.id}
-                      className="grid sm:grid-cols-[minmax(0,1fr)_150px_auto] gap-3 items-start"
+                      className="grid items-start gap-3 rounded-2xl border border-white/10 bg-slate-900/70 p-4 sm:grid-cols-[minmax(0,1fr)_160px_auto]"
                     >
-                      <div className="form-control">
-                        <label className="label">
-                          <span className="text-xs text-base-content/60">
-                            Description #{idx + 2}
-                          </span>
-                        </label>
+                      <label className="form-control">
+                        <span className="text-xs uppercase tracking-widest text-slate-400">
+                          Description #{idx + 2}
+                        </span>
                         <textarea
-                          className="textarea textarea-bordered"
+                          className="textarea textarea-bordered border-white/10 bg-slate-950/80 text-slate-100"
                           placeholder="DETENTION RATE"
                           rows={2}
                           value={item.description || ""}
@@ -572,18 +764,14 @@ export default function CreateInvoice({ company, currentUser }) {
                             })
                           }
                         />
-                      </div>
-                      <div className="form-control">
-                        <label className="label">
-                          <span className="text-xs text-base-content/60">
-                            Amount (USD)
-                          </span>
-                        </label>
+                      </label>
+                      <label className="form-control">
+                        <span className="text-xs uppercase tracking-widest text-slate-400">Amount (USD)</span>
                         <input
                           type="number"
                           inputMode="decimal"
                           step="0.01"
-                          className="input input-bordered"
+                          className="input input-bordered border-white/10 bg-slate-950/80 text-slate-100"
                           placeholder="50.00"
                           value={
                             typeof item.amountInput === "string"
@@ -594,11 +782,11 @@ export default function CreateInvoice({ company, currentUser }) {
                             handleExtraAmountChange(item.id, e.target.value)
                           }
                         />
-                      </div>
-                      <div className="flex sm:justify-end pt-6">
+                      </label>
+                      <div className="flex justify-end pt-6">
                         <button
                           type="button"
-                          className="btn btn-ghost btn-sm text-error"
+                          className="btn btn-ghost text-rose-200 hover:bg-rose-500/10"
                           onClick={() =>
                             setLineItems((items) =>
                               items.filter((entry) => entry.id !== item.id)
@@ -613,13 +801,15 @@ export default function CreateInvoice({ company, currentUser }) {
                 </div>
               </div>
 
-              <div className="flex gap-3">
-                <button className="btn btn-primary" onClick={handleSubmit}>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  className="btn border-emerald-400/60 bg-emerald-500/90 text-slate-950 hover:border-emerald-300 hover:bg-emerald-400"
+                  onClick={handleSubmit}
+                >
                   Create Invoice
                 </button>
                 <button
-                  
-                  className="btn btn-ghost"
+                  className="btn btn-ghost text-slate-300 hover:bg-white/10"
                   onClick={() => {
                     setStep(1);
                     setSelectedClient(null);
@@ -629,10 +819,8 @@ export default function CreateInvoice({ company, currentUser }) {
                     resetLineItems();
                   }}
                 >
-                  
                   Start Over
                 </button>
-              
               </div>
             </div>
           )}
@@ -641,52 +829,57 @@ export default function CreateInvoice({ company, currentUser }) {
             
         <aside className="lg:sticky lg:top-4">
           {step === 3 && (
-            <InvoicePreview
-              company={company}
-              user={currentUser}
-              client={selectedClient}
-              invoice={{
-                invoiceNumber,
-                invoiceDate,
-                loadRef,
-                description: computedInvoiceDetails.primaryDescription,
-                amountCents: computedInvoiceDetails.total,
-                lineItems: computedInvoiceDetails.normalized,
-              }}
-            />
+            <div className="rounded-3xl border border-white/10 bg-white/90 p-4 text-slate-900 shadow-2xl shadow-slate-950/40">
+              <InvoicePreview
+                company={company}
+                user={currentUser}
+                client={selectedClient}
+                invoice={{
+                  invoiceNumber,
+                  invoiceDate,
+                  loadRef,
+                  description: computedInvoiceDetails.primaryDescription,
+                  amountCents: computedInvoiceDetails.total,
+                  lineItems: computedInvoiceDetails.normalized,
+                }}
+              />
+            </div>
           )}
         </aside>
       </div>
 
-            
-       {showClientModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-full w-full max-w-2xl overflow-y-auto">
-            <div className="relative w-full bg-white rounded-xl shadow-xl p-6">
+
+      {showClientModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur">
+          <div className="max-h-full w-full max-w-2xl overflow-y-auto px-4 py-10">
+            <div className="relative w-full rounded-3xl border border-white/10 bg-white/95 p-6 text-slate-900 shadow-2xl">
               <button
                 className="btn btn-sm btn-ghost absolute top-3 right-3"
                 onClick={closeClientModal}
               >
                 ✕
               </button>
-              <h2 className="text-xl font-semibold mb-4">Add Bill-To</h2>
-              <form className="space-y-4" onSubmit={handleClientCreate}>
-                <div className="grid md:grid-cols-2 gap-4">
+              <h2 className="text-2xl font-semibold text-slate-900">Add Bill-To</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Capture the client details and we&apos;ll walk you straight into the matching route step.
+              </p>
+              <form className="mt-6 space-y-5" onSubmit={handleClientCreate}>
+                <div className="grid gap-4 md:grid-cols-2">
                   <label className="form-control">
-                    <span className="label-text">Client name</span>
+                    <span className="text-xs uppercase tracking-widest text-slate-500">Client name</span>
                     <input
-                      className="input input-bordered"
+                      className="input input-bordered border-slate-200 bg-slate-50 text-slate-900 focus:border-sky-400"
                       value={clientForm.name}
                       onChange={(e) => handleClientFormChange("name", e.target.value)}
                       required
                     />
                   </label>
                   <label className="form-control">
-                    <span className="label-text">Payment terms (days)</span>
+                    <span className="text-xs uppercase tracking-widest text-slate-500">Payment terms (days)</span>
                     <input
                       type="number"
                       min={0}
-                      className="input input-bordered"
+                      className="input input-bordered border-slate-200 bg-slate-50 text-slate-900 focus:border-sky-400"
                       value={clientForm.paymentTermsDays}
                       onChange={(e) =>
                         handleClientFormChange("paymentTermsDays", e.target.value)
@@ -695,64 +888,29 @@ export default function CreateInvoice({ company, currentUser }) {
                   </label>
                 </div>
                 <label className="form-control">
-                  <span className="label-text">Billing address</span>
+                  <span className="text-xs uppercase tracking-widest text-slate-500">Billing address</span>
                   <textarea
-                    className="textarea textarea-bordered"
+                    className="textarea textarea-bordered border-slate-200 bg-slate-50 text-slate-900 focus:border-sky-400"
                     rows={3}
                     value={clientForm.address}
                     onChange={(e) => handleClientFormChange("address", e.target.value)}
                   />
                 </label>
                 <label className="form-control">
-                  <span className="label-text">Invoice emails (comma separated)</span>
+                  <span className="text-xs uppercase tracking-widest text-slate-500">
+                    Invoice emails (comma separated)
+                  </span>
                   <textarea
-                    className="textarea textarea-bordered"
+                    className="textarea textarea-bordered border-slate-200 bg-slate-50 text-slate-900 focus:border-sky-400"
                     rows={2}
                     value={clientForm.emailTo}
                     onChange={(e) => handleClientFormChange("emailTo", e.target.value)}
                   />
                 </label>
+                <p className="text-sm text-slate-500">
+                  After saving the bill-to you&apos;ll be prompted to add or pick a route.
+                </p>
 
-                <div className="divider">Default Route</div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <label className="form-control">
-                    <span className="label-text">Route name</span>
-                    <input
-                      className="input input-bordered"
-                      placeholder="Chicago ➝ Dallas"
-                      value={clientForm.routeName}
-                      onChange={(e) => handleClientFormChange("routeName", e.target.value)}
-                    />
-                  </label>
-                  <label className="form-control">
-                    <span className="label-text">Base amount (USD)</span>
-                    <input
-                      className="input input-bordered"
-                      type="number"
-                      inputMode="decimal"
-                      step="0.01"
-                      placeholder="1200.00"
-                      value={clientForm.routeAmount}
-                      onChange={(e) =>
-                        handleClientFormChange("routeAmount", e.target.value)
-                      }
-                    />
-                  </label>
-                </div>
-                <label className="form-control">
-                  <span className="label-text">Route description</span>
-                  <textarea
-                    className="textarea textarea-bordered"
-                    rows={3}
-                    placeholder="Linehaul from Chicago to Dallas"
-                    value={clientForm.routeDescription}
-                    onChange={(e) =>
-                      handleClientFormChange("routeDescription", e.target.value)
-                    }
-                  />
-                </label>
-              
                 <div className="flex justify-end gap-3 pt-2">
                   <button
                     type="button"
@@ -762,16 +920,93 @@ export default function CreateInvoice({ company, currentUser }) {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary" disabled={savingClient}>
+                  <button
+                    type="submit"
+                    className="btn border-sky-400/60 bg-sky-500/90 text-white hover:border-sky-300 hover:bg-sky-400"
+                    disabled={savingClient}
+                  >
                     {savingClient ? "Saving…" : "Save Bill-To"}
                   </button>
                 </div>
               </form>
             </div>
           </div>
-        
+
         </div>
       )}
+      {showRouteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur">
+          <div className="max-h-full w-full max-w-xl overflow-y-auto px-4 py-10">
+            <div className="relative w-full rounded-3xl border border-white/10 bg-white/95 p-6 text-slate-900 shadow-2xl">
+              <button
+                className="btn btn-sm btn-ghost absolute top-3 right-3"
+                onClick={closeRouteModal}
+              >
+                ✕
+              </button>
+              <h2 className="text-2xl font-semibold text-slate-900">Add Route</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Give the lane a descriptive name, add the base amount, and optionally refine the description template.
+              </p>
+              <form className="mt-6 space-y-5" onSubmit={handleRouteCreate}>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="form-control">
+                    <span className="text-xs uppercase tracking-widest text-slate-500">Route name</span>
+                    <input
+                      className="input input-bordered border-slate-200 bg-slate-50 text-slate-900 focus:border-sky-400"
+                      placeholder="Chicago ➝ Dallas"
+                      value={routeForm.name}
+                      onChange={(e) => handleRouteFormChange("name", e.target.value)}
+                    />
+                  </label>
+                  <label className="form-control">
+                    <span className="text-xs uppercase tracking-widest text-slate-500">Amount (USD)</span>
+                    <input
+                      className="input input-bordered border-slate-200 bg-slate-50 text-slate-900 focus:border-sky-400"
+                      type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      placeholder="1200.00"
+                      value={routeForm.amount}
+                      onChange={(e) => handleRouteFormChange("amount", e.target.value)}
+                      required
+                    />
+                  </label>
+                </div>
+                <label className="form-control">
+                  <span className="text-xs uppercase tracking-widest text-slate-500">Description</span>
+                  <textarea
+                    className="textarea textarea-bordered border-slate-200 bg-slate-50 text-slate-900 focus:border-sky-400"
+                    rows={3}
+                    placeholder="Linehaul from Chicago to Dallas"
+                    value={routeForm.description}
+                    onChange={(e) => handleRouteFormChange("description", e.target.value)}
+                  />
+                </label>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={closeRouteModal}
+                    disabled={savingRoute}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn border-sky-400/60 bg-sky-500/90 text-white hover:border-sky-300 hover:bg-sky-400"
+                    disabled={savingRoute}
+                  >
+                    {savingRoute ? "Saving…" : "Save Route"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        )}
+      </div>
     </div>
   );
 
