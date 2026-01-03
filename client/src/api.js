@@ -143,4 +143,7 @@ export const api = {
   search(q) {
     return request(`/api/invoices/search?q=${encodeURIComponent(q)}`);
   },
+  deleteInvoice(id) {
+    return request(`/api/invoices/${encodeURIComponent(id)}`, { method: "DELETE" });
+  },
 };

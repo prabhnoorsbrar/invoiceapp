@@ -26,13 +26,7 @@ export default function Search() {
 
   async function deleteInvoice(id) {
     if (!window.confirm("Delete this invoice? This cannot be undone.")) return;
-    await fetch(`${import.meta.env.VITE_API_BASE}/api/invoices/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-      },
-    });
+    await api.deleteInvoice(id);
     setRows((prev) => prev.filter((row) => row._id !== id));
   }
 

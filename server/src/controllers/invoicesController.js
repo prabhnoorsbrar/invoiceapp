@@ -92,8 +92,17 @@ export const listOutstanding = asyncHandler(async (req, res) => {
   const rows = await Invoice.find({
     companyId,
     status: 'outstanding',
-  }).sort({ invoiceDate: 1 })
-  res.json(rows)
+  })
+    .sort({ invoiceDate: 1 })
+    .populate({ path: 'clientId', select: 'name address paymentTermsDays' })
+    .lean()
+
+  res.json(
+    rows.map(({ clientId, ...rest }) => ({
+      ...rest,
+      client: clientId,
+    }))
+  )
 })
 
 // GET /api/invoices/search?q=...
@@ -107,7 +116,15 @@ export const search = asyncHandler(async (req, res) => {
   })
     .sort({ invoiceDate: -1 })
     .limit(200)
-  res.json(rows)
+    .populate({ path: 'clientId', select: 'name address paymentTermsDays' })
+    .lean()
+
+  res.json(
+    rows.map(({ clientId, ...rest }) => ({
+      ...rest,
+      client: clientId,
+    }))
+  )
 })
 
 // POST /api/invoices/:id/mark-paid
