@@ -718,72 +718,91 @@ export default function CreateInvoice({ company, currentUser }) {
        {showClientModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="max-h-full w-full max-w-2xl overflow-y-auto">
-            <div className="relative w-full rounded-xl bg-white p-6 text-gray-900 shadow-xl">
+            <div className="relative w-full rounded-2xl bg-gradient-to-br from-sky-50 via-white to-indigo-50 p-6 text-gray-900 shadow-2xl">
               <button
                 className="btn btn-sm btn-ghost absolute top-3 right-3"
                 onClick={closeClientModal}
               >
                 ✕
               </button>
-              <h2 className="text-xl font-semibold mb-4">Add Bill-To</h2>
-              <form className="space-y-4" onSubmit={handleClientCreate}>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <label className="form-control">
-                    <span className="text-sm font-medium text-gray-700">Client name</span>
-                    <input
-                      className="input input-bordered text-gray-900"
-                      value={clientForm.name}
-                      onChange={(e) => handleClientFormChange("name", e.target.value)}
-                      required
-                    />
-                  </label>
-                  <label className="form-control">
-                    <span className="text-sm font-medium text-gray-700">Payment terms (days)</span>
-                    <input
-                      type="number"
-                      min={0}
-                      className="input input-bordered text-gray-900"
-                      value={clientForm.paymentTermsDays}
-                      onChange={(e) =>
-                        handleClientFormChange("paymentTermsDays", e.target.value)
-                      }
-                    />
-                  </label>
+              <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-indigo-600">Billing details</p>
+                  <h2 className="text-xl font-semibold">Add Bill-To</h2>
                 </div>
-                <label className="form-control">
-                  <span className="text-sm font-medium text-gray-700">Billing address</span>
-                  <textarea
-                    className="textarea textarea-bordered text-gray-900"
-                    rows={3}
-                    value={clientForm.address}
-                    onChange={(e) => handleClientFormChange("address", e.target.value)}
-                  />
-                </label>
-                <label className="form-control">
-                  <span className="text-sm font-medium text-gray-700">
-                    Invoice emails (comma separated)
-                  </span>
-                  <textarea
-                    className="textarea textarea-bordered text-gray-900"
-                    rows={2}
-                    value={clientForm.emailTo}
-                    onChange={(e) => handleClientFormChange("emailTo", e.target.value)}
-                  />
-                </label>
+                <div className="hidden rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 md:block">
+                  New client
+                </div>
+              </div>
+              <form className="space-y-5 pt-4" onSubmit={handleClientCreate}>
+                <div className="rounded-2xl border border-indigo-100 bg-white p-4 shadow-md">
+                  <div className="grid gap-4">
+                    <div className="grid items-center gap-3 md:grid-cols-[170px_1fr]">
+                      <span className="text-sm font-semibold text-gray-700">Client name</span>
+                      <input
+                        className="input input-bordered w-full bg-white text-gray-900 shadow-sm"
+                        value={clientForm.name}
+                        onChange={(e) => handleClientFormChange("name", e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="grid items-center gap-3 md:grid-cols-[170px_1fr]">
+                      <span className="text-sm font-semibold text-gray-700">Payment terms</span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min={0}
+                          className="input input-bordered w-28 bg-white text-gray-900 shadow-sm"
+                          value={clientForm.paymentTermsDays}
+                          onChange={(e) =>
+                            handleClientFormChange("paymentTermsDays", e.target.value)
+                          }
+                        />
+                        <span className="text-sm text-gray-500">days</span>
+                      </div>
+                    </div>
+                    <div className="grid items-start gap-3 md:grid-cols-[170px_1fr]">
+                      <span className="text-sm font-semibold text-gray-700">Billing address</span>
+                      <textarea
+                        className="textarea textarea-bordered w-full bg-white text-gray-900 shadow-sm"
+                        rows={3}
+                        value={clientForm.address}
+                        onChange={(e) => handleClientFormChange("address", e.target.value)}
+                      />
+                    </div>
+                    <div className="grid items-start gap-3 md:grid-cols-[170px_1fr]">
+                      <span className="text-sm font-semibold text-gray-700">
+                        Invoice emails
+                        <span className="block text-xs font-normal text-gray-500">Comma separated</span>
+                      </span>
+                      <textarea
+                        className="textarea textarea-bordered w-full bg-white text-gray-900 shadow-sm"
+                        rows={2}
+                        value={clientForm.emailTo}
+                        onChange={(e) => handleClientFormChange("emailTo", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
                 <p className="text-sm text-gray-500">
                   After saving the bill-to you'll be prompted to add or pick a route.
                 </p>
 
-                <div className="flex justify-end gap-3 pt-2">
+                <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
                   <button
                     type="button"
-                    className="btn btn-ghost"
+                    className="btn btn-ghost sm:min-w-[120px]"
                     onClick={closeClientModal}
                     disabled={savingClient}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary" disabled={savingClient}>
+                  <button
+                    type="submit"
+                    className="btn btn-primary sm:min-w-[120px]"
+                    disabled={savingClient}
+                  >
                     {savingClient ? "Saving…" : "Save Bill-To"}
                   </button>
                 </div>

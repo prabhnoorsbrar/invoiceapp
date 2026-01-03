@@ -13,16 +13,31 @@ export default function Search() {
   const [q, setQ] = useState("");
   const [rows, setRows] = useState([]);
 
-  async function handleSearch(e) {
-    e.preventDefault();
+  async function fetchResults(searchTerm) {
     try {
-      const data = await api.search(q);
+      const data = await api.search(searchTerm);
       setRows(data);
     } catch (err) {
       console.error(err);
       alert("Search failed");
     }
   }
+  async function handleSearch(e) {
+    e.preventDefault();
+    fetchResults(q);
+  }
+
+  async function reopen(id) {
+    if (!window.confirm("Unmark as paid?")) return;
+    try {
+      await api.reopen(id);
+      fetchResults(q);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to unmark invoice as paid");
+    }
+  }
+
 
   async function deleteInvoice(id) {
     if (!window.confirm("Delete this invoice? This cannot be undone.")) return;
@@ -88,7 +103,15 @@ export default function Search() {
                     </li>
                   )}
                 </ul>
-                <div className="mt-4">
+                <div className="mt-4 flex flex-col gap-2">
+                  {r.status === "paid" && (
+                    <button
+                      onClick={() => reopen(r._id)}
+                      className="btn btn-warning btn-block btn-sm"
+                    >
+                      Unmark Paid
+                    </button>
+                  )}
                   <button
                     onClick={() => deleteInvoice(r._id)}
                     className="btn btn-error btn-block btn-sm"
