@@ -734,13 +734,16 @@ export default function CreateInvoice({ company, currentUser }) {
                   New client
                 </div>
               </div>
-              <form className="space-y-5 pt-4" onSubmit={handleClientCreate}>
+              <form
+                className="space-y-4 rounded-xl border border-blue-100 bg-blue-50 p-4"
+                onSubmit={handleClientCreate}
+              >
                 <div className="rounded-2xl border border-indigo-100 bg-white p-4 shadow-md">
                   <div className="grid gap-4">
                     <div className="grid items-center gap-3 md:grid-cols-[170px_1fr]">
                       <span className="text-sm font-semibold text-gray-700">Client name</span>
                       <input
-                        className="input input-bordered w-full bg-white text-gray-900 shadow-sm"
+                        className="input input-bordered w-full border-indigo-100 bg-slate-50 text-gray-900 shadow-sm focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200"
                         value={clientForm.name}
                         onChange={(e) => handleClientFormChange("name", e.target.value)}
                         required
@@ -752,7 +755,7 @@ export default function CreateInvoice({ company, currentUser }) {
                         <input
                           type="number"
                           min={0}
-                          className="input input-bordered w-28 bg-white text-gray-900 shadow-sm"
+                          className="input input-bordered w-28 border-indigo-100 bg-slate-50 text-gray-900 shadow-sm focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200"
                           value={clientForm.paymentTermsDays}
                           onChange={(e) =>
                             handleClientFormChange("paymentTermsDays", e.target.value)
@@ -764,7 +767,7 @@ export default function CreateInvoice({ company, currentUser }) {
                     <div className="grid items-start gap-3 md:grid-cols-[170px_1fr]">
                       <span className="text-sm font-semibold text-gray-700">Billing address</span>
                       <textarea
-                        className="textarea textarea-bordered w-full bg-white text-gray-900 shadow-sm"
+                        className="textarea textarea-bordered w-full border-indigo-100 bg-slate-50 text-gray-900 shadow-sm focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200"
                         rows={3}
                         value={clientForm.address}
                         onChange={(e) => handleClientFormChange("address", e.target.value)}
@@ -776,7 +779,7 @@ export default function CreateInvoice({ company, currentUser }) {
                         <span className="block text-xs font-normal text-gray-500">Comma separated</span>
                       </span>
                       <textarea
-                        className="textarea textarea-bordered w-full bg-white text-gray-900 shadow-sm"
+                        className="textarea textarea-bordered w-full border-indigo-100 bg-slate-50 text-gray-900 shadow-sm focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200"
                         rows={2}
                         value={clientForm.emailTo}
                         onChange={(e) => handleClientFormChange("emailTo", e.target.value)}
@@ -823,8 +826,10 @@ export default function CreateInvoice({ company, currentUser }) {
                 ✕
               </button>
               <h2 className="text-xl font-semibold mb-4">Add Route</h2>
-              <form className="space-y-4" onSubmit={handleRouteCreate}>
-
+              <form
+                className="space-y-4 rounded-xl border border-blue-100 bg-blue-50 p-4"
+                onSubmit={handleRouteCreate}
+              >
                 <div className="grid md:grid-cols-2 gap-4">
                   <label className="form-control">
                     <span className="text-sm font-medium text-gray-700">Route name</span>
