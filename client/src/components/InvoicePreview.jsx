@@ -152,53 +152,40 @@ export default function InvoicePreview({ company, user, client, invoice }) {
     };
 
     const addHeaderLogo = () => {
-      pdf.setFillColor(brandBlue.r, brandBlue.g, brandBlue.b);
-      pdf.roundedRect(marginLeft, y - 8, 26, 18, 2, 2, "F");
-      pdf.setFillColor(255, 255, 255);
-      pdf.rect(marginLeft + 3, y - 2, 13, 5, "F");
-      pdf.circle(marginLeft + 8, y + 6, 1.6, "F");
-      pdf.circle(marginLeft + 18, y + 6, 1.6, "F");
-      pdf.setFontSize(7);
-      pdf.setTextColor(brandBlue.r, brandBlue.g, brandBlue.b);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("US", marginLeft + 5, y + 1.5);
-      pdf.text("PRIDE", marginLeft + 5, y + 5.5);
-      pdf.setTextColor(255, 255, 255);
-      pdf.text("LOGISTICS", marginLeft + 5, y + 9.5);
+      
 
       pdf.setTextColor(brandBlue.r, brandBlue.g, brandBlue.b);
       pdf.setFontSize(12);
-      pdf.text("US PRIDE LOGISTICS INC", marginLeft + 30, y + 2);
+      //pdf.text("US PRIDE LOGISTICS INC", marginLeft + 30, y + 2);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(businessName, marginLeft, y + 2);
       pdf.setFontSize(9);
       pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(0);
       if (street) {
-        pdf.text(street, marginLeft + 30, y + 8);
+        pdf.text(street, marginLeft, y + 8);
       }
       if (cityStateZip) {
-        pdf.text(cityStateZip, marginLeft + 30, y + 13);
+        pdf.text(cityStateZip, marginLeft, y + 13);
       }
       if (phone) {
-        pdf.text(phone, marginLeft + 30, y + 18);
+        pdf.text(phone, marginLeft, y + 18);
       }
-      y += 26;
+      y += 22;
     };
 
 
       const addInvoiceTitle = () => {
-      pdf.setFillColor(paleBlue.r, paleBlue.g, paleBlue.b);
-      pdf.rect(pageWidth - marginRight - 45, 12, 45, 20, "F");
+      //pdf.setFillColor(paleBlue.r, paleBlue.g, paleBlue.b);
+      //pdf.rect(pageWidth - marginRight - 45, 12, 45, 20, "F");
       pdf.setFontSize(20);
       pdf.setFont("helvetica", "bold");
       pdf.setTextColor(brandBlue.r, brandBlue.g, brandBlue.b);
       pdf.text("INVOICE", pageWidth - marginRight - 40, 26);
       pdf.setTextColor(60);
       pdf.setFontSize(9);
-      const contactLines = [businessName, street, cityStateZip, phone]
-        .filter(Boolean)
-        .slice(0, 4);
-      contactLines.forEach((line, idx) => {
-        pdf.text(line, pageWidth - marginRight - pdf.getTextWidth(line), 36 + idx * 5);
-      });
+      //const contactLines = [businessName, street, cityStateZip, phone]
+      
     };
 
     const addClientBox = () => {
