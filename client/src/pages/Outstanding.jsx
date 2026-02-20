@@ -8,6 +8,11 @@ function currency(cents) {
     currency: "USD",
   }).format(cents / 100);
 }
+function formatDate(value, fallback = "-") {
+  return value ? value.slice(0, 10) : fallback;
+}
+
+
 
 export default function Outstanding() {
   const [rows, setRows] = useState([]);
@@ -52,9 +57,93 @@ export default function Outstanding() {
     await api.deleteInvoice(id);
     loadData();
   }
+  function downloadCsv(filename, headers, records) {
+    const escapeCell = (value) => {
+      const normalized = String(value ?? "");
+      return `"${normalized.replaceAll('"', '""')}"`;
+    };
 
+    const csv = [
+      headers.map(escapeCell).join(","),
+      ...records.map((row) => row.map(escapeCell).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  function exportOutstandingInvoices() {
+    downloadCsv(
+      "outstanding-invoices.csv",
+      ["client_name", "invoice_number", "issue_date", "amount", "status"],
+      rows.map((invoice) => [
+        invoice.client?.name || "-",
+        invoice.invoiceNumber || "-",
+        formatDate(invoice.invoiceDate),
+        currency(invoice.amountCents),
+        invoice.status || "-",
+      ])
+    );
+  }
+
+  async function exportYtdInvoices() {
+    const allInvoices = await api.search("");
+    const currentYear = new Date().getFullYear();
+    const ytdInvoices = allInvoices.filter((invoice) => {
+      if (!invoice.invoiceDate) return false;
+      return new Date(invoice.invoiceDate).getFullYear() === currentYear;
+    });
+
+    const totalCents = ytdInvoices.reduce(
+      (sum, invoice) => sum + (invoice.amountCents || 0),
+      0
+    );
+
+    downloadCsv(
+      "ytd-invoices.csv",
+      [
+        "client_name",
+        "invoice_number",
+        "issue_date",
+        "amount",
+        "status",
+        "paid_date",
+      ],
+      [
+        ...ytdInvoices.map((invoice) => [
+          invoice.client?.name || "-",
+          invoice.invoiceNumber || "-",
+          formatDate(invoice.invoiceDate),
+          currency(invoice.amountCents),
+          invoice.status || "-",
+          invoice.status === "paid"
+            ? formatDate(invoice.paidDate)
+            : "N/A",
+        ]),
+        ["TOTAL", "", "", currency(totalCents), "", ""],
+      ]
+    );
+  }
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={exportOutstandingInvoices}
+          className="btn btn-success btn-sm"
+        >
+          Export Outstanding
+        </button>
+        <button
+          onClick={exportYtdInvoices}
+          className="btn btn-success btn-sm"
+        >
+          Export YTD
+        </button>
+      </div>
       <div className="grid md:grid-cols-3 gap-4">
         <KPI label="Outstanding" value={currency(kpi.outstandingTotalCents)} />
         <KPI label="Open Count" value={String(kpi.outstandingCount)} />
