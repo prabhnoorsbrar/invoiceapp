@@ -1,0 +1,31 @@
+{
+  "patches": {
+    "pkg:npm/jspdf@2.5.2": {
+      "uuid": "9c6eb8aa-6cab-41d3-8141-1555e16f11f4",
+      "exportedAt": "Thu, 05 Mar 2026 22:03:01 GMT",
+      "files": {
+        "package/dist/jspdf.node.js": {
+          "beforeHash": "823763631c68ab4736d36d167cf6c325c318f23093950680c54bf32dbdb4af18",
+          "afterHash": "80c66b76944ed8da5a30b92ee46d733a827886bda04232d9d78d7beb4466af57"
+        },
+        "package/dist/jspdf.node.min.js": {
+          "beforeHash": "caaded3528500ef15449e39da07f0cbad8ff0cae13ff75ba8b766821e63e8b86",
+          "afterHash": "4c953d197c699193d18aaaf239a737329b091cffcf315fdb6951f8670aaacc06"
+        }
+      },
+      "vulnerabilities": {
+        "GHSA-f8cm-6447-x5h2": {
+          "cves": [
+            "CVE-2025-68428"
+          ],
+          "summary": "jsPDF has Local File Inclusion/Path Traversal vulnerability",
+          "severity": "CRITICAL",
+          "description": "### Impact\nUser control of the first argument of the loadFile method in the node.js build allows local file inclusion/path traversal.\n\nIf given the possibility to pass unsanitized paths to the loadFile method, a user can retrieve file contents of arbitrary files in the local file system the node process is running in. The file contents are included verbatim in the generated PDFs.\n\nOther affected methods are: `addImage`, `html`, `addFont`.\n\nOnly the node.js builds of the library are affected, namely the `dist/jspdf.node.js` and `dist/jspdf.node.min.js` files.\n\nExample attack vector:\n\n```js\nimport { jsPDF } from \"./dist/jspdf.node.js\";\n\nconst doc = new jsPDF();\n\ndoc.addImage(\"./secret.txt\", \"JPEG\", 0, 0, 10, 10);\ndoc.save(\"test.pdf\"); // the generated PDF will contain the \"secret.txt\" file\n```\n\n### Patches\nThe vulnerability has been fixed in jsPDF@4.0.0. This version restricts file system access per default. This semver-major update does not introduce other breaking changes.\n\n### Workarounds\nWith recent node versions, jsPDF recommends using the `--permission` flag in production. The feature was introduced experimentally in v20.0.0 and is stable since v22.13.0/v23.5.0/v24.0.0. See the [node documentation](https://nodejs.org/api/permissions.html) for details.\n\nFor older node versions, sanitize user-provided paths before passing them to jsPDF.\n\n### Credits\nResearcher: kilkat (Kwangwoon Kim)"
+        }
+      },
+      "description": "",
+      "license": "MIT",
+      "tier": "free"
+    }
+  }
+}
