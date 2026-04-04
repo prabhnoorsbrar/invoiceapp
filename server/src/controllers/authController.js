@@ -35,7 +35,7 @@ export const register = asyncHandler(async (req, res) => {
 
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email }).collation({ locale: "en", strength: 2 });
+  const user = await User.findOne({ email: email.toLowerCase() });
   if (!user || !(await user.verifyPassword(password)))
     throw new HttpError(401, "Invalid credentials");
   const company = await Company.findById(user.companyId);
