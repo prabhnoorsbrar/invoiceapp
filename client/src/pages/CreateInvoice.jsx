@@ -63,6 +63,15 @@ function createLineItem(overrides = {}) {
   return merged;
 }
 export default function CreateInvoice({ company, currentUser }) {
+  const [toast, setToast] = useState(null);
+  const toastTimer = React.useRef(null);
+
+  function showToast(message, type = "info") {
+    clearTimeout(toastTimer.current);
+    setToast({ message, type });
+    toastTimer.current = setTimeout(() => setToast(null), 4000);
+  }
+
   const [step, setStep] = useState(1);
   const [clients, setClients] = useState([]);
   const [routes, setRoutes] = useState([]);
@@ -213,11 +222,11 @@ export default function CreateInvoice({ company, currentUser }) {
   }
   async function handleSubmit() {
     if (!selectedClient?._id) {
-      alert("Pick a bill-to client before creating an invoice.");
+      showToast("Pick a bill-to client before creating an invoice.", "error");
       return;
     }
     if (!selectedRoute?._id) {
-      alert("Pick a route before creating an invoice.");
+      showToast("Pick a route before creating an invoice.", "error");
       return;
     }
 
@@ -225,11 +234,11 @@ export default function CreateInvoice({ company, currentUser }) {
       computedInvoiceDetails;
 
     if (!hasAnyDescription) {
-      alert("Add a description for at least one line item.");
+      showToast("Add a description for at least one line item.", "error");
       return;
     }
     if (!total || total <= 0) {
-      alert("Enter an amount greater than $0.00.");
+      showToast("Enter an amount greater than $0.00.", "error");
       return;
     }
     const payload = {
@@ -245,7 +254,7 @@ export default function CreateInvoice({ company, currentUser }) {
     try {
       const created = await api.createInvoice(payload);
       if (created?._id) {
-        alert(`Invoice ${invoiceNumber} created.`);
+        showToast(`Invoice ${invoiceNumber} created successfully.`, "success");
         localStorage.setItem("lastInvoice", invoiceNumber);
         setInvoiceNumber(nextInvoiceNumber);
         setSelectedClient(null);
@@ -255,11 +264,11 @@ export default function CreateInvoice({ company, currentUser }) {
         setLoadRef("");
         resetLineItems();
       } else {
-        alert("Failed to create invoice.");
+        showToast("Failed to create invoice.", "error");
       }
     } catch (err) {
       console.error(err);
-      alert(`Create failed: ${err.message || err}`);
+      showToast(err.message || "Create failed.", "error");
     }
   }
   function handlePrimaryAmountChange(value) {
@@ -295,7 +304,7 @@ export default function CreateInvoice({ company, currentUser }) {
 
     const name = clientForm.name.trim();
     if (!name) {
-      alert("Client name is required.");
+      showToast("Client name is required.", "error");
       return;
     }
 
@@ -329,14 +338,14 @@ export default function CreateInvoice({ company, currentUser }) {
       
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to create bill-to");
+      showToast(err.message || "Failed to create bill-to.", "error");
     } finally {
       setSavingClient(false);
     }
   }
   function openRouteModal() {
     if (!selectedClient?._id) {
-      alert("Select a bill-to client before adding a route.");
+      showToast("Select a bill-to client before adding a route.", "error");
       return;
     }
     setRouteForm(defaultRouteFormState);
@@ -366,7 +375,7 @@ export default function CreateInvoice({ company, currentUser }) {
     }
 
     if (!amountCents || amountCents <= 0) {
-      alert("Enter an amount greater than $0.00 for the route.");
+      showToast("Enter an amount greater than $0.00 for the route.", "error");
       return;
     }
 
@@ -385,7 +394,7 @@ export default function CreateInvoice({ company, currentUser }) {
       handleRouteSelect(createdRoute);
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to create route");
+      showToast(err.message || "Failed to create route.", "error");
     } finally {
       setSavingRoute(false);
     }
@@ -396,7 +405,14 @@ export default function CreateInvoice({ company, currentUser }) {
     overrideDescription || !routeDescription;
 
   return (
-    
+    <div className="relative">
+      {toast && (
+        <div className="toast toast-top toast-center z-50">
+          <div className={`alert ${toast.type === "success" ? "alert-success" : toast.type === "error" ? "alert-error" : "alert-info"} shadow-lg`}>
+            <span>{toast.message}</span>
+          </div>
+        </div>
+      )}
     <div className="relative">
       <div className="grid lg:grid-cols-[1fr_420px] gap-6">
         <section className="space-y-6">
@@ -884,6 +900,7 @@ export default function CreateInvoice({ company, currentUser }) {
         
         </div>
       )}
+    </div>
     </div>
   );
 

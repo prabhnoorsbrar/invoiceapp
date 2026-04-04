@@ -13,8 +13,9 @@ export default function InvoicePreview({ company, user, client, invoice }) {
 
   const formatDate = (iso) => {
     if (!iso) return null;
-    const d = new Date(iso);
-    return isNaN(d) ? null : d.toISOString().slice(0, 10);
+    const parts = String(iso).slice(0, 10).split("-");
+    if (parts.length !== 3) return null;
+    return `${parts[1]}/${parts[2]}/${parts[0]}`;
   };
 
   // --- Address parsing helper ---
@@ -224,9 +225,9 @@ export default function InvoicePreview({ company, user, client, invoice }) {
           const dt = new Date(invoice?.invoiceDate);
           if (!isNaN(dt)) {
             dt.setDate(dt.getDate() + Number(client.paymentTermsDays));
-            return dt.toISOString().slice(0, 10);
+            return formatDate(dt.toISOString().slice(0, 10));
           }
-          }
+        }
         return null;
       })();
 

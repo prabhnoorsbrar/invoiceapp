@@ -24,46 +24,43 @@ export default function App() {
     );
   }
 
+  const navItems = [
+    { id: "create", label: "Create Invoice" },
+    { id: "outstanding", label: "Outstanding" },
+    { id: "search", label: "Search" },
+  ];
+
   return (
-    <div className="p-4">
-      <header className="flex gap-2 mb-4 justify-between items-center">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setView("create")}
-            className={`px-4 py-2 rounded ${view === "create" ? "bg-blue-600 text-white" : "bg-gray-100"}`}
-          >
-            Create
-          </button>
-          <button
-            onClick={() => setView("outstanding")}
-            className={`px-4 py-2 rounded ${view === "outstanding" ? "bg-blue-600 text-white" : "bg-gray-100"}`}
-          >
-            Outstanding
-          </button>
-          <button
-            onClick={() => setView("search")}
-            className={`px-4 py-2 rounded ${view === "search" ? "bg-blue-600 text-white" : "bg-gray-100"}`}
-          >
-            Search
-          </button>
+    <div className="min-h-screen bg-base-200">
+      <header className="bg-base-100 border-b shadow-sm px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="font-bold text-base hidden sm:block">US Pride Logistics</span>
+          <div className="tabs tabs-boxed bg-base-200">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setView(item.id)}
+                className={`tab ${view === item.id ? "tab-active" : ""}`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
         <button
-          onClick={() => {
-            logout();
-            setAuthed(false);
-            setUser(null);
-            setCompany(null);
-          }}
-          className="text-sm underline"
+          onClick={() => { logout(); setAuthed(false); setUser(null); setCompany(null); }}
+          className="btn btn-ghost btn-sm"
         >
           Logout
         </button>
       </header>
+      <main className="p-4 max-w-7xl mx-auto">
 
       
       {view === "create" && <CreateInvoice company={company} currentUser={user} />}
       {view === "outstanding" && <Outstanding />}
       {view === "search" && <Search />}
+      </main>
     </div>
   );
 }
