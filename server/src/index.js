@@ -3,6 +3,8 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import mongoose from "mongoose";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 import authRoutes from "./routes/auth.js";
 import clientRoutes from "./routes/clients.js";
@@ -10,13 +12,20 @@ import routeRoutes from "./routes/routes.js";
 import invoiceRoutes from "./routes/invoices.js";
 
 const app = express();
-app.use(cors());
+app.use(helmet());
+app.use(cors({ origin: process.env.CLIENT_ORIGIN }));
 app.use(express.json());
-//app.use(morgan("dev"));
+app.use(morgan("dev"));
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: "Too many requests, please try again later." },
+});
 
 app.get("/health", (_, res) => res.json({ ok: true }));
 
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/clients", clientRoutes);
 app.use("/api/routes", routeRoutes);
 app.use("/api/invoices", invoiceRoutes);
@@ -33,6 +42,12 @@ mongoose
   .catch((err) => {
     console.error('❌ Mongo connection error:', err.message)
   });
+
+app.use((err, _req, res, _next) => {
+  const status = err.status || 500;
+  const message = status < 500 ? err.message : "Internal server error";
+  res.status(status).json({ error: message });
+});
 
 // ---- server/src/utils/errors.js ----
 export class HttpError extends Error {
