@@ -14,7 +14,7 @@ import invoiceRoutes from "./routes/invoices.js";
 
 const app = express();
 app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_ORIGIN, credentials: true }));
+app.use(cors({ origin: process.env.CLIENT_ORIGIN, credentials: true, maxAge: 86400 }));
 app.use(cookieParser());
 app.use(express.json());
 app.use(morgan("dev"));

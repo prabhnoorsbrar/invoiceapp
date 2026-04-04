@@ -26,4 +26,5 @@ const RouteSchema = new mongoose.Schema(
   { timestamps: true }
 );
 RouteSchema.index({ companyId: 1, clientId: 1, name: 1 }, { unique: true });
+RouteSchema.index({ companyId: 1, clientId: 1, active: 1 });
 export default mongoose.model("Route", RouteSchema);
