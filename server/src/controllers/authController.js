@@ -3,6 +3,17 @@ import Company from '../models/Company.js';
 import { sign } from '../utils/auth.js';
 import { HttpError, asyncHandler } from '../utils/errors.js';
 
+const COOKIE_OPTS = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
+function setAuthCookie(res, token) {
+  res.cookie("jwt", token, COOKIE_OPTS);
+}
+
 
 export const register = asyncHandler(async (req, res) => {
   const { email, password, companyName } = req.body;
@@ -17,8 +28,8 @@ export const register = asyncHandler(async (req, res) => {
     companyId: company._id,
     role: "admin",
   });
+  setAuthCookie(res, sign(user));
   res.json({
-    token: sign(user),
     user: {
       id: user._id,
       email,
@@ -39,11 +50,11 @@ export const login = asyncHandler(async (req, res) => {
   if (!user || !(await user.verifyPassword(password)))
     throw new HttpError(401, "Invalid credentials");
   const company = await Company.findById(user.companyId);
+  setAuthCookie(res, sign(user));
   res.json({
-    token: sign(user),
     user: {
       id: user._id,
-      email,
+      email: user.email,
       companyId: user.companyId,
       role: user.role,
       address: user.address,
@@ -53,4 +64,9 @@ export const login = asyncHandler(async (req, res) => {
     },
     company: company ? { id: company._id, name: company.name } : null,
   });
+});
+
+export const logout = asyncHandler(async (_req, res) => {
+  res.clearCookie("jwt", { httpOnly: true, secure: true, sameSite: "none" });
+  res.json({ ok: true });
 });

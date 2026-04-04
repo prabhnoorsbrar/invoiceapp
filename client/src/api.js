@@ -1,31 +1,23 @@
 // client/src/api.js
 const base = (import.meta.env?.VITE_API_BASE || "http://localhost:4000").replace(/\/+$/, "");
 
-let token = localStorage.getItem("jwt") || "";
 let currentUser = null;
 let currentCompany = null;
 
 try {
   const storedUser = localStorage.getItem("currentUser");
   currentUser = storedUser ? JSON.parse(storedUser) : null;
-} catch (err) {
+} catch {
   currentUser = null;
 }
 
 try {
   const storedCompany = localStorage.getItem("currentCompany");
   currentCompany = storedCompany ? JSON.parse(storedCompany) : null;
-} catch (err) {
+} catch {
   currentCompany = null;
 }
-export function setToken(t) {
-  token = t || "";
-  if (t) localStorage.setItem("jwt", t);
-  else localStorage.removeItem("jwt");
-}
-export function getToken() {
-  return token;
-}
+
 export function setCurrentUser(user) {
   currentUser = user || null;
   if (user) localStorage.setItem("currentUser", JSON.stringify(user));
@@ -45,46 +37,46 @@ export function setCurrentCompany(company) {
 export function getCurrentCompany() {
   return currentCompany;
 }
+
 export function getSessionProfile() {
   return { user: currentUser, company: currentCompany };
 }
 
 export function applyAuthResult(result = {}) {
-  const { token: nextToken, user, company } = result;
-  if (nextToken) setToken(nextToken);
+  const { user, company } = result;
   if (user !== undefined) setCurrentUser(user);
   if (company !== undefined) setCurrentCompany(company);
   return getSessionProfile();
 }
 
-export function logout() {
-  setToken("");
+export async function logout() {
+  try {
+    await fetch(`${base}/api/auth/logout`, { method: "POST", credentials: "include" });
+  } catch {
+    // best-effort
+  }
   setCurrentUser(null);
-  setCurrentCompany(null); // clears localStorage too
-}
-
-function headers(extra = {}) {
-  const h = { "Content-Type": "application/json", ...extra };
-  if (token) h.Authorization = `Bearer ${token}`;
-  return h;
+  setCurrentCompany(null);
 }
 
 async function request(path, { method = "GET", body, ...opts } = {}) {
   const res = await fetch(`${base}${path}`, {
     method,
-    headers: headers(opts.headers),
+    credentials: "include",
+    headers: { "Content-Type": "application/json", ...opts.headers },
     body: body ? JSON.stringify(body) : undefined,
     ...opts,
   });
 
-  // Try to parse JSON even on error, to surface server messages
   let data = null;
-  const text = await res.text(); // handle empty bodies safely
+  const text = await res.text();
   try { data = text ? JSON.parse(text) : null; } catch { data = text; }
 
   if (!res.ok) {
-    // Auto-logout on 401 if we were authenticated
-    if (res.status === 401 && token) logout();
+    if (res.status === 401 && currentUser) {
+      setCurrentUser(null);
+      setCurrentCompany(null);
+    }
     const msg = (data && (data.error || data.message)) || `HTTP ${res.status}`;
     throw new Error(msg);
   }
@@ -116,7 +108,7 @@ export const api = {
     return request(`/api/clients`, { method: "POST", body: payload });
   },
 
-  // Routes (for preset picker later)
+  // Routes
   listRoutesByClient(clientId) {
     return request(`/api/routes/${encodeURIComponent(clientId)}`);
   },
