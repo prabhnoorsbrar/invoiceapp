@@ -1,29 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { logout, getCurrentUser, getCurrentCompany, getSessionProfile } from "./api";
+import React, { useState } from "react";
+import { logout, getCurrentUser, getCurrentCompany } from "./api";
 import CreateInvoice from "./pages/CreateInvoice";
 import Outstanding from "./pages/Outstanding";
 import Search from "./pages/Search";
 import Login from "./pages/Login";
 
 export default function App() {
-  const initialSession = getSessionProfile();
-  const [authed, setAuthed] = useState(() => !!localStorage.getItem("jwt"));
+  const [authed, setAuthed] = useState(() => !!getCurrentUser());
   const [view, setView] = useState("outstanding");
   const [user, setUser] = useState(() => getCurrentUser());
   const [company, setCompany] = useState(() => getCurrentCompany());
-
-  // On first load, check for saved token
-  useEffect(() => {
-    const token = localStorage.getItem("jwt");
-    setAuthed(!!token);
-    if (token) {
-      setUser(getCurrentUser());
-      setCompany(getCurrentCompany());
-    } else {
-      setUser(null);
-      setCompany(null);
-    }
-  }, []);
 
   // ❗ This prevents the full app from showing if user isn't logged in
   if (!authed) {

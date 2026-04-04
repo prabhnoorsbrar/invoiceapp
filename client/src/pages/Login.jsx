@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { api, setToken, setCurrentUser, setCurrentCompany,applyAuthResult } from "../api";
-
+import { api, setCurrentUser, setCurrentCompany } from "../api";
 
 export default function Login({ onSuccess }) {
   const [email, setEmail] = useState("");
@@ -14,13 +13,12 @@ export default function Login({ onSuccess }) {
     setLoading(true);
     try {
       const res = await api.login(email, password);
-      if (res?.token) {
-        setToken(res.token);
+      if (res?.user) {
         setCurrentUser(res.user);
         setCurrentCompany(res.company);
-        onSuccess?.(res.user, res.company); // tells App.jsx "we're logged in!" // tells App.jsx "we're logged in!"
+        onSuccess?.(res.user, res.company);
       } else {
-        setError("Login failed: No token returned");
+        setError("Login failed");
       }
     } catch (err) {
       setError(err.message || "Login failed");

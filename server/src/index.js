@@ -5,6 +5,7 @@ import morgan from "morgan";
 import mongoose from "mongoose";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 
 import authRoutes from "./routes/auth.js";
 import clientRoutes from "./routes/clients.js";
@@ -13,7 +14,8 @@ import invoiceRoutes from "./routes/invoices.js";
 
 const app = express();
 app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_ORIGIN }));
+app.use(cors({ origin: process.env.CLIENT_ORIGIN, credentials: true }));
+app.use(cookieParser());
 app.use(express.json());
 app.use(morgan("dev"));
 
