@@ -15,4 +15,5 @@ const ClientSchema = new mongoose.Schema(
   { timestamps: true }
 );
 ClientSchema.index({ companyId: 1, name: 1 }, { unique: true });
+ClientSchema.index({ companyId: 1, active: 1 });
 export default mongoose.model("Client", ClientSchema);

@@ -4,9 +4,7 @@ import { asyncHandler } from "../utils/errors.js";
 export const listByClient = asyncHandler(async (req, res) => {
   const { companyId } = req.user;
   const { clientId } = req.params;
-  const rows = await Route.find({ companyId, clientId, active: true }).sort({
-    name: 1,
-  });
+  const rows = await Route.find({ companyId, clientId, active: true }).sort({ name: 1 }).lean();
   res.json(rows);
 });
 

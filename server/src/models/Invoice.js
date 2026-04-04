@@ -29,5 +29,5 @@ const InvoiceSchema = new mongoose.Schema(
 InvoiceSchema.index({ companyId: 1, invoiceNumber: 1 }, { unique: true });
 InvoiceSchema.index({ companyId: 1, status: 1 });
 InvoiceSchema.index({ companyId: 1, invoiceDate: 1 });
-InvoiceSchema.index({ companyId: 1, paidDate: 1 });
+InvoiceSchema.index({ companyId: 1, status: 1, paidDate: 1 });
 export default mongoose.model("Invoice", InvoiceSchema);
