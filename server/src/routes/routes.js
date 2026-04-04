@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth } from "../utils/auth.js";
+import { requireAuth, requireRole } from "../utils/auth.js";
 import {
   listByClient,
   createPreset,
@@ -8,6 +8,6 @@ import {
 const r = Router();
 r.use(requireAuth);
 r.get("/:clientId", listByClient);
-r.post("/", createPreset);
-r.post("/:routeId/price", updatePrice);
+r.post("/", requireRole("admin", "finance"), createPreset);
+r.post("/:routeId/price", requireRole("admin", "finance"), updatePrice);
 export default r;

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth } from "../utils/auth.js";
+import { requireAuth, requireRole } from "../utils/auth.js";
 import {
   create,
   listOutstanding,
@@ -14,8 +14,8 @@ r.use(requireAuth);
 r.get("/kpis", kpis);
 r.get("/outstanding", listOutstanding);
 r.get("/search", search);
-r.post("/", create);
-r.post("/:id/mark-paid", markPaid);
-r.post("/:id/reopen", reopen);
-r.delete("/:id", requireAuth, remove);
+r.post("/", requireRole("admin", "finance"), create);
+r.post("/:id/mark-paid", requireRole("admin", "finance"), markPaid);
+r.post("/:id/reopen", requireRole("admin", "finance"), reopen);
+r.delete("/:id", requireRole("admin"), remove);
 export default r;

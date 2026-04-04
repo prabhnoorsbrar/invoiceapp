@@ -6,6 +6,14 @@ export function sign(user) {
     { expiresIn: "7d" }
   );
 }
+export function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role))
+      return res.status(403).json({ error: "Forbidden" });
+    next();
+  };
+}
+
 export function requireAuth(req, res, next) {
   const hdr = req.headers.authorization || "";
   const token = hdr.startsWith("Bearer ") ? hdr.slice(7) : null;
