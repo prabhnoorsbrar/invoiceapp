@@ -136,7 +136,11 @@ export default function InvoicePreview({ company, user, client, invoice }) {
     const usableWidth = pageWidth - marginLeft - marginRight;
     const brandBlue = { r: 26, g: 88, b: 168 };
     const paleBlue = { r: 232, g: 241, b: 252 };
-    let y = 18;
+    let y = 22;
+
+    // Top accent bar
+    pdf.setFillColor(brandBlue.r, brandBlue.g, brandBlue.b);
+    pdf.rect(0, 0, pageWidth, 6, "F");
 
     const addLabelValue = (label, value, x, yPos, options = {}) => {
       const { bold = false, skipWhenEmpty = false } = options;
@@ -172,7 +176,14 @@ export default function InvoicePreview({ company, user, client, invoice }) {
       if (phone) {
         pdf.text(phone, marginLeft, y + 18);
       }
-      y += 22;
+      y += 26;
+      // Separator line under header
+      pdf.setDrawColor(brandBlue.r, brandBlue.g, brandBlue.b);
+      pdf.setLineWidth(0.4);
+      pdf.line(marginLeft, y, pageWidth - marginRight, y);
+      pdf.setLineWidth(0.2);
+      pdf.setDrawColor(200, 200, 200);
+      y += 6;
     };
 
 
@@ -254,20 +265,26 @@ export default function InvoicePreview({ company, user, client, invoice }) {
     };
 
     const addBillTo = () => {
-      pdf.setFontSize(10);
+      const addressLines = (client?.address || "").split(/\r?\n/).filter(Boolean);
+      const lines = [client?.name || "Client", ...addressLines];
+      const boxHeight = 10 + lines.length * 5 + 4;
+      // Pale blue background
+      pdf.setFillColor(paleBlue.r, paleBlue.g, paleBlue.b);
+      pdf.roundedRect(marginLeft, y, usableWidth / 2, boxHeight, 2, 2, "F");
+      // Left blue accent strip
+      pdf.setFillColor(brandBlue.r, brandBlue.g, brandBlue.b);
+      pdf.roundedRect(marginLeft, y, 3, boxHeight, 1, 1, "F");
+      pdf.setFontSize(8);
       pdf.setFont("helvetica", "bold");
       pdf.setTextColor(brandBlue.r, brandBlue.g, brandBlue.b);
-      pdf.text("Bill To", marginLeft, y + 2);
+      pdf.text("BILL TO", marginLeft + 6, y + 6);
       pdf.setTextColor(0);
       pdf.setFont("helvetica", "normal");
-      const addressLines = (client?.address || "")
-        .split(/\r?\n/)
-        .filter(Boolean);
-      const lines = [client?.name || "Client", ...addressLines];
+      pdf.setFontSize(9);
       lines.forEach((line, idx) => {
-        pdf.text(line, marginLeft, y + 8 + idx * 5);
+        pdf.text(line, marginLeft + 6, y + 12 + idx * 5);
       });
-      y += 8 + lines.length * 5;
+      y += boxHeight + 6;
     };
   const addTable = () => {
       y += 4;
@@ -276,29 +293,21 @@ export default function InvoicePreview({ company, user, client, invoice }) {
       const unitWidth = usableWidth * 0.16;
 
       const headerY = y;
+      // Table header background
+      pdf.setFillColor(brandBlue.r, brandBlue.g, brandBlue.b);
+      pdf.roundedRect(marginLeft, headerY - 6, usableWidth, 10, 1, 1, "F");
       pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(10);
-      pdf.setTextColor(brandBlue.r, brandBlue.g, brandBlue.b);
-      pdf.text("DESCRIPTION", marginLeft, headerY);
+      pdf.setFontSize(9);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text("DESCRIPTION", marginLeft + 3, headerY);
       pdf.text("QUANTITY", marginLeft + descWidth + 4, headerY, { align: "right" });
-      pdf.text(
-        "UNIT PRICE",
-        marginLeft + descWidth + qtyWidth + 8,
-        headerY,
-        { align: "right" }
-      );
-      pdf.text(
-        "AMOUNT",
-        marginLeft + descWidth + qtyWidth + unitWidth + 12,
-        headerY,
-        { align: "right" }
-      );
+      pdf.text("UNIT PRICE", marginLeft + descWidth + qtyWidth + 8, headerY, { align: "right" });
+      pdf.text("AMOUNT", marginLeft + descWidth + qtyWidth + unitWidth + 12, headerY, { align: "right" });
       pdf.setTextColor(0);
       pdf.setFont("helvetica", "normal");
       pdf.setDrawColor(230, 230, 230);
-      pdf.line(marginLeft, headerY + 3, marginLeft + usableWidth, headerY + 3);
 
-      let rowY = headerY + 10;
+      let rowY = headerY + 8;
       invoiceLineItems.forEach((item, index) => {
         const amount =
           typeof item.amountCents === "number" && Number.isFinite(item.amountCents)
@@ -376,7 +385,6 @@ export default function InvoicePreview({ company, user, client, invoice }) {
 
     addHeaderLogo();
     addInvoiceTitle();
-    addClientBox();
     addInvoiceMeta();
     addBillTo();
     addTable();
@@ -385,15 +393,21 @@ export default function InvoicePreview({ company, user, client, invoice }) {
     const filename = invoiceNumber ? `Invoice ${invoiceNumber}.pdf` : "Invoice Preview.pdf";
     const blob = pdf.output("blob");
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 100);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } else {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+    }
   }, [
     businessName,
     cityStateZip,
