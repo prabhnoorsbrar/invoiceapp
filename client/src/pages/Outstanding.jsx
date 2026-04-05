@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { api } from "../api";
+import { generateInvoicePdf } from "../utils/generateInvoicePdf";
 
 function currency(cents) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
@@ -29,7 +30,7 @@ function daysOverdue(dueDate) {
   return Math.floor((today - due) / (1000 * 60 * 60 * 24));
 }
 
-function InvoiceCard({ r, onMarkPaid, onDelete }) {
+function InvoiceCard({ r, onMarkPaid, onDelete, company, currentUser }) {
   const overdue = daysOverdue(r.dueDate);
   const isOverdue = overdue !== null && overdue > 0;
   const isDueToday = overdue === 0;
@@ -98,7 +99,14 @@ function InvoiceCard({ r, onMarkPaid, onDelete }) {
       </div>
 
       {/* Buttons */}
-      <div className="grid grid-cols-2 border-t border-base-300 divide-x divide-base-300">
+      <div className="grid grid-cols-3 border-t border-base-300 divide-x divide-base-300">
+        <button
+          onClick={() => generateInvoicePdf({ invoice: { ...r, lineItems: r.lineItems }, client: r.client, company, user: currentUser })}
+          className="py-3 text-sm font-bold text-primary bg-primary/15 hover:bg-primary/25 transition-colors"
+          title="Download PDF"
+        >
+          ↓ PDF
+        </button>
         <button
           onClick={() => onMarkPaid(r)}
           className="py-3 text-sm font-bold text-success bg-success/15 hover:bg-success/25 transition-colors"
@@ -116,7 +124,7 @@ function InvoiceCard({ r, onMarkPaid, onDelete }) {
   );
 }
 
-export default function Outstanding() {
+export default function Outstanding({ company, currentUser }) {
   const [rows, setRows] = useState([]);
   const [kpi, setKpi] = useState({ outstandingTotalCents: 0, outstandingCount: 0, ytdIncomeCents: 0 });
   const [loading, setLoading] = useState(true);
@@ -266,6 +274,8 @@ export default function Outstanding() {
               r={r}
               onMarkPaid={(r) => { setMarkPaidTarget(r); setPaidDate((() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })()); setPaidMethod(""); }}
               onDelete={setDeleteTarget}
+              company={company}
+              currentUser={currentUser}
             />
           ))}
         </div>

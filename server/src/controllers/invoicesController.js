@@ -44,6 +44,7 @@ export const create = asyncHandler(async (req, res) => {
     loadRef,
     status = 'outstanding',
     invoiceNumber,
+    lineItems,
   } = req.body
 
   const client = await Client.findOne({ _id: clientId, companyId })
@@ -77,6 +78,7 @@ export const create = asyncHandler(async (req, res) => {
     loadRef,
     description: desc,
     amountCents: amt,
+    lineItems: Array.isArray(lineItems) && lineItems.length ? lineItems : undefined,
     invoiceDate: invDate,
     dueDate,
     status,

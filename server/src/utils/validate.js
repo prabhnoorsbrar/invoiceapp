@@ -35,6 +35,14 @@ export const schemas = {
     loadRef: z.string().max(100).optional(),
     invoiceNumber: z.string().max(50).optional(),
     status: z.enum(["outstanding", "paid"]).optional(),
+    lineItems: z.array(
+      z.object({
+        id: z.string().optional(),
+        description: z.string().max(500).optional(),
+        amountCents: z.number().int().optional(),
+        isPrimary: z.boolean().optional(),
+      })
+    ).optional(),
   }),
 
   markPaid: z.object({

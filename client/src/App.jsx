@@ -66,8 +66,8 @@ export default function App() {
       {/* Page content */}
       <main className="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto pb-24 md:pb-6">
         {view === "create" && <CreateInvoice company={company} currentUser={user} prefill={prefill} onPrefillConsumed={() => setPrefill(null)} />}
-        {view === "outstanding" && <Outstanding />}
-        {view === "search" && <Search onDuplicate={(r) => { setPrefill(r); setView("create"); }} />}
+        {view === "outstanding" && <Outstanding company={company} currentUser={user} />}
+        {view === "search" && <Search onDuplicate={(r) => { setPrefill(r); setView("create"); }} company={company} currentUser={user} />}
       </main>
 
       {/* Mobile bottom nav */}
