@@ -107,6 +107,15 @@ export const api = {
   createClient(payload) {
     return request(`/api/clients`, { method: "POST", body: payload });
   },
+  updateClient(id, payload) {
+    return request(`/api/clients/${encodeURIComponent(id)}`, { method: "PUT", body: payload });
+  },
+  deleteClient(id) {
+    return request(`/api/clients/${encodeURIComponent(id)}`, { method: "DELETE" });
+  },
+  updateMe(payload) {
+    return request(`/api/auth/me`, { method: "PUT", body: payload });
+  },
 
   // Routes
   listRoutesByClient(clientId) {

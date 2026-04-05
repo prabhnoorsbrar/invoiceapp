@@ -70,3 +70,19 @@ export const logout = asyncHandler(async (_req, res) => {
   res.clearCookie("jwt", { httpOnly: true, secure: true, sameSite: "none" });
   res.json({ ok: true });
 });
+
+export const updateMe = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id);
+  if (!user) throw new HttpError(404, "User not found");
+  const { email, currentPassword, newPassword } = req.body;
+  if (newPassword) {
+    if (!currentPassword) throw new HttpError(400, "Current password required");
+    if (!(await user.verifyPassword(currentPassword))) throw new HttpError(401, "Current password is incorrect");
+    user.passwordHash = await User.hash(newPassword);
+  }
+  if (email) user.email = email.toLowerCase().trim();
+  await user.save();
+  const token = sign(user);
+  setAuthCookie(res, token);
+  res.json({ user: { id: user._id, email: user.email, companyId: user.companyId, role: user.role, firstName: user.firstName, lastName: user.lastName, phone: user.phone } });
+});

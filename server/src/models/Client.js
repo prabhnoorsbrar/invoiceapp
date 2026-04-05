@@ -8,6 +8,7 @@ const ClientSchema = new mongoose.Schema(
     },
     name: { type: String, required: true },
     emailTo: [{ type: String }],
+    cc: [{ type: String }],
     address: String,
     paymentTermsDays: { type: Number, default: 30 },
     active: { type: Boolean, default: true },
