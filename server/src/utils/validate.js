@@ -73,6 +73,26 @@ export const schemas = {
     newPassword: z.string().min(8).optional(),
   }),
 
+  updateCompany: z.object({
+    name: z.string().min(1).max(200).optional(),
+    address: z.string().max(500).optional(),
+    phone: z.string().max(50).optional(),
+  }),
+
+  updateInvoice: z.object({
+    invoiceNumber: z.string().max(50).optional(),
+    invoiceDate: z.string().optional(),
+    description: z.string().min(1).max(500).optional(),
+    amountCents: z.number().int().positive().optional(),
+    loadRef: z.string().max(100).optional().nullable(),
+    lineItems: z.array(z.object({
+      id: z.string().optional(),
+      description: z.string().max(500).optional(),
+      amountCents: z.number().int().optional(),
+      isPrimary: z.boolean().optional(),
+    })).optional(),
+  }),
+
   createRoute: z.object({
     clientId: objectId,
     name: z.string().min(1, "Name required").max(200),

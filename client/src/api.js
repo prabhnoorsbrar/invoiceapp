@@ -117,6 +117,9 @@ export const api = {
   updateMe(payload) {
     return request(`/api/auth/me`, { method: "PUT", body: payload });
   },
+  updateCompany(payload) {
+    return request(`/api/auth/company`, { method: "PUT", body: payload });
+  },
 
   // Routes
   listRoutesByClient(clientId) {
@@ -147,6 +150,9 @@ export const api = {
   },
   search(q) {
     return request(`/api/invoices/search?q=${encodeURIComponent(q)}`);
+  },
+  updateInvoice(id, payload) {
+    return request(`/api/invoices/${encodeURIComponent(id)}`, { method: "PATCH", body: payload });
   },
   deleteInvoice(id) {
     return request(`/api/invoices/${encodeURIComponent(id)}`, { method: "DELETE" });

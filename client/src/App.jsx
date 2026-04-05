@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { logout, getCurrentUser, getCurrentCompany, setCurrentUser } from "./api";
+import { logout, getCurrentUser, getCurrentCompany, setCurrentUser, setCurrentCompany } from "./api";
 import CreateInvoice from "./pages/CreateInvoice";
 import Outstanding from "./pages/Outstanding";
 import Search from "./pages/Search";
@@ -13,6 +13,7 @@ export default function App() {
   const [company, setCompany] = useState(() => getCurrentCompany());
   const [prefill, setPrefill] = useState(null);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [outstandingCount, setOutstandingCount] = useState(0);
 
   React.useEffect(() => {
     function handleExpired() {
@@ -59,13 +60,18 @@ export default function App() {
             <button
               key={item.id}
               onClick={() => setView(item.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+              className={`relative px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
                 view === item.id
                   ? "bg-primary text-primary-content border-primary"
                   : "border-primary/50 text-primary hover:bg-primary/10 hover:border-primary"
               }`}
             >
               {item.label}
+              {item.id === "outstanding" && outstandingCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                  {outstandingCount > 99 ? "99+" : outstandingCount}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -93,9 +99,22 @@ export default function App() {
       {/* Page content */}
       <main className="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto pb-24 md:pb-6">
         {view === "create" && <CreateInvoice company={company} currentUser={user} prefill={prefill} onPrefillConsumed={() => setPrefill(null)} />}
-        {view === "outstanding" && <Outstanding company={company} currentUser={user} />}
+        {view === "outstanding" && (
+          <Outstanding
+            company={company}
+            currentUser={user}
+            onCountChange={setOutstandingCount}
+          />
+        )}
         {view === "search" && <Search onDuplicate={(r) => { setPrefill(r); setView("create"); }} company={company} currentUser={user} />}
-        {view === "settings" && <Settings currentUser={user} onUserUpdate={(u) => { setUser(u); setCurrentUser(u); }} />}
+        {view === "settings" && (
+          <Settings
+            currentUser={user}
+            onUserUpdate={(u) => { setUser(u); setCurrentUser(u); }}
+            company={company}
+            onCompanyUpdate={(c) => { setCompany(c); setCurrentCompany(c); }}
+          />
+        )}
       </main>
 
       {/* Mobile bottom nav */}
@@ -122,7 +141,7 @@ export default function App() {
                     <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? "text-primary" : "text-base-content/40"}`}>{item.label}</span>
                   </div>
                 ) : (
-                  <div className={`flex flex-col items-center gap-1 px-5 py-1.5 rounded-2xl transition-all duration-200 ${
+                  <div className={`relative flex flex-col items-center gap-1 px-5 py-1.5 rounded-2xl transition-all duration-200 ${
                     isActive ? "bg-primary/20 border border-primary/30" : ""
                   }`}>
                     <span className={`text-lg leading-none transition-colors duration-200 ${isActive ? "text-primary" : "text-base-content/30"}`}>
@@ -131,6 +150,11 @@ export default function App() {
                     <span className={`text-[10px] font-bold uppercase tracking-wider transition-colors duration-200 ${isActive ? "text-primary" : "text-base-content/25"}`}>
                       {item.label}
                     </span>
+                    {item.id === "outstanding" && outstandingCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-0.5 rounded-full bg-error text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                        {outstandingCount > 99 ? "99+" : outstandingCount}
+                      </span>
+                    )}
                   </div>
                 )}
               </button>

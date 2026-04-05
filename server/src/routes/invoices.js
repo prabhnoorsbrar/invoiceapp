@@ -10,6 +10,7 @@ import {
   kpis,
   remove,
   lastNumber,
+  update,
 } from "../controllers/invoicesController.js";
 const r = Router();
 r.use(requireAuth);
@@ -20,5 +21,6 @@ r.get("/search", search);
 r.post("/", requireRole("admin", "finance"), validate(schemas.createInvoice), create);
 r.post("/:id/mark-paid", requireRole("admin", "finance"), validate(schemas.markPaid), markPaid);
 r.post("/:id/reopen", requireRole("admin", "finance"), reopen);
+r.patch("/:id", requireRole("admin", "finance"), validate(schemas.updateInvoice), update);
 r.delete("/:id", requireRole("admin"), remove);
 export default r;

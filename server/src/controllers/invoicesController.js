@@ -186,6 +186,40 @@ export const reopen = asyncHandler(async (req, res) => {
   if (!row) return res.status(404).json({ error: 'Not found' })
   res.json(row)
 })
+// PATCH /api/invoices/:id
+export const update = asyncHandler(async (req, res) => {
+  const { companyId } = req.user
+  const { id } = req.params
+  const { invoiceNumber, invoiceDate, description, amountCents, loadRef, lineItems } = req.body
+
+  const existing = await Invoice.findOne({ _id: id, companyId })
+  if (!existing) return res.status(404).json({ error: 'Not found' })
+
+  if (invoiceNumber !== undefined) existing.invoiceNumber = invoiceNumber.trim()
+  if (invoiceDate !== undefined) {
+    existing.invoiceDate = new Date(invoiceDate)
+    const client = await Client.findById(existing.clientId)
+    existing.dueDate = computeDueDate(existing.invoiceDate, client?.paymentTermsDays)
+  }
+  if (description !== undefined) existing.description = description
+  if (amountCents !== undefined) existing.amountCents = amountCents
+  if (loadRef !== undefined) existing.loadRef = loadRef
+  if (lineItems !== undefined) existing.lineItems = lineItems
+
+  try {
+    await existing.save()
+  } catch (err) {
+    if (err.code === 11000) return res.status(409).json({ error: `Invoice number "${existing.invoiceNumber}" already exists` })
+    throw err
+  }
+
+  const populated = await Invoice.findById(existing._id)
+    .populate({ path: 'clientId', select: 'name address paymentTermsDays' })
+    .lean()
+  const { clientId, ...rest } = populated
+  res.json({ ...rest, client: clientId })
+})
+
 export const remove = asyncHandler(async (req, res) => {
   const { companyId } = req.user;
   const { id } = req.params;
