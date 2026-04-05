@@ -66,18 +66,18 @@ function InvoiceCard({ r, onReopen, onDelete }) {
         )}
       </div>
 
-      <div className={`grid border-t border-base-300 ${isPaid ? "grid-cols-2" : "grid-cols-1"}`}>
+      <div className={`grid border-t border-base-300 divide-x divide-base-300 ${isPaid ? "grid-cols-2" : "grid-cols-1"}`}>
         {isPaid && (
           <button
             onClick={() => onReopen(r)}
-            className="py-3 text-sm font-semibold text-warning hover:bg-warning/10 transition-colors border-r border-base-300"
+            className="py-3 text-sm font-bold text-warning bg-warning/15 hover:bg-warning/25 transition-colors"
           >
             Unmark Paid
           </button>
         )}
         <button
           onClick={() => onDelete(r)}
-          className="py-3 text-sm font-semibold text-error hover:bg-error/10 transition-colors"
+          className="py-3 text-sm font-bold text-error bg-error/15 hover:bg-error/25 transition-colors"
         >
           Delete
         </button>
@@ -135,7 +135,7 @@ export default function Search() {
       <form onSubmit={handleSearch}>
         <div className="flex gap-2">
           <input
-            className="input input-bordered flex-1"
+            className="input flex-1 bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search by invoice #, client, load ref, description…"
@@ -167,7 +167,7 @@ export default function Search() {
               <strong>#{reopenTarget.invoiceNumber}</strong> · {reopenTarget.client?.name} will be moved back to outstanding.
             </p>
             <div className="flex gap-3 justify-end pt-2">
-              <button className="btn btn-ghost" onClick={() => setReopenTarget(null)} disabled={reopening}>Cancel</button>
+              <button className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={() => setReopenTarget(null)} disabled={reopening}>Cancel</button>
               <button className="btn btn-warning" onClick={confirmReopen} disabled={reopening}>
                 {reopening ? <span className="loading loading-spinner loading-sm" /> : "Confirm"}
               </button>
@@ -184,7 +184,7 @@ export default function Search() {
               <strong>#{deleteTarget.invoiceNumber}</strong> · {deleteTarget.client?.name} · {currency(deleteTarget.amountCents)} will be permanently deleted.
             </p>
             <div className="flex gap-3 justify-end pt-2">
-              <button className="btn btn-ghost" onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancel</button>
+              <button className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancel</button>
               <button className="btn btn-error" onClick={confirmDelete} disabled={deleting}>
                 {deleting ? <span className="loading loading-spinner loading-sm" /> : "Delete"}
               </button>

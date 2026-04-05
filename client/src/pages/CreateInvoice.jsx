@@ -419,7 +419,7 @@ export default function CreateInvoice({ company, currentUser }) {
               <div className="flex items-center justify-between mb-2">
                 <h1 className="text-xl font-semibold">Pick a Bill-To</h1>
                 <button
-                  className="btn btn-sm btn-outline"
+                  className="px-3 py-1.5 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors"
                   onClick={() => setShowClientModal(true)}
                 >
                   + Add
@@ -448,7 +448,7 @@ export default function CreateInvoice({ company, currentUser }) {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h1 className="text-xl font-semibold">Pick a Route</h1>
-                <button className="btn btn-sm btn-outline" onClick={openRouteModal}>
+                <button className="px-3 py-1.5 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={openRouteModal}>
                   + Add Route
                 </button>
               </div>
@@ -484,7 +484,7 @@ export default function CreateInvoice({ company, currentUser }) {
                     </button>
                   );
                 })}
-                <button className="btn btn-outline btn-sm mt-3" onClick={() => setStep(1)}>
+                <button className="px-3 py-1.5 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors mt-3" onClick={() => setStep(1)}>
                   ← Back to Bill-To
                 </button>
               </div>
@@ -605,7 +605,7 @@ export default function CreateInvoice({ company, currentUser }) {
                   <h2 className="text-lg font-semibold">Additional Line Items</h2>
                   <button
                     type="button"
-                    className="btn btn-sm btn-outline"
+                    className="px-3 py-1.5 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors"
                     onClick={handleAddLineItem}
                   >
                     + Add line item
@@ -668,7 +668,7 @@ export default function CreateInvoice({ company, currentUser }) {
                       <div className="flex sm:justify-end pt-6">
                         <button
                           type="button"
-                          className="btn btn-ghost btn-sm text-error"
+                          className="px-3 py-1 rounded-lg border-2 border-error/50 text-error text-sm font-semibold hover:bg-error/10 transition-colors"
                           onClick={() =>
                             setLineItems((items) =>
                               items.filter((entry) => entry.id !== item.id)
@@ -688,7 +688,7 @@ export default function CreateInvoice({ company, currentUser }) {
                   Create Invoice
                 </button>
                 <button
-                  className="btn btn-outline"
+                  className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors"
                   onClick={() => {
                     setStep(1);
                     setSelectedClient(null);
@@ -784,7 +784,7 @@ export default function CreateInvoice({ company, currentUser }) {
                 </div>
                 <p className="text-xs text-base-content/40">After saving you'll be prompted to add or pick a route.</p>
                 <div className="flex gap-3 justify-end pt-2 border-t border-base-300">
-                  <button type="button" className="btn btn-outline" onClick={closeClientModal} disabled={savingClient}>Cancel</button>
+                  <button type="button" className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={closeClientModal} disabled={savingClient}>Cancel</button>
                   <button type="submit" className="btn btn-primary px-6" disabled={savingClient}>
                     {savingClient ? <span className="loading loading-spinner loading-sm" /> : "Save Bill-To"}
                   </button>
@@ -838,7 +838,7 @@ export default function CreateInvoice({ company, currentUser }) {
                   />
                 </div>
                 <div className="flex justify-end gap-3 pt-2 border-t border-base-300">
-                  <button type="button" className="btn btn-outline" onClick={closeRouteModal} disabled={savingRoute}>Cancel</button>
+                  <button type="button" className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={closeRouteModal} disabled={savingRoute}>Cancel</button>
                   <button type="submit" className="btn btn-primary px-6" disabled={savingRoute}>
                     {savingRoute ? <span className="loading loading-spinner loading-sm" /> : "Save Route"}
                   </button>
