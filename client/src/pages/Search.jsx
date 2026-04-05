@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { api } from "../api";
+import { generateInvoicePdf } from "../utils/generateInvoicePdf";
 
 function currency(cents) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
@@ -10,7 +11,7 @@ function formatDate(value, fallback = "-") {
   return `${m}/${d}/${y}`;
 }
 
-function InvoiceCard({ r, onReopen, onDelete, onDuplicate }) {
+function InvoiceCard({ r, onReopen, onDelete, onDuplicate, company, currentUser }) {
   const isPaid = r.status === "paid";
   return (
     <div className="bg-base-100 rounded-2xl border border-base-300 overflow-hidden flex flex-col hover:border-base-content/20 transition-all hover:shadow-lg">
@@ -66,7 +67,7 @@ function InvoiceCard({ r, onReopen, onDelete, onDuplicate }) {
         )}
       </div>
 
-      <div className={`grid border-t border-base-300 divide-x divide-base-300 ${isPaid ? "grid-cols-3" : "grid-cols-2"}`}>
+      <div className={`grid border-t border-base-300 divide-x divide-base-300 ${isPaid ? "grid-cols-4" : "grid-cols-3"}`}>
         {isPaid && (
           <button
             onClick={() => onReopen(r)}
@@ -75,6 +76,13 @@ function InvoiceCard({ r, onReopen, onDelete, onDuplicate }) {
             Unmark Paid
           </button>
         )}
+        <button
+          onClick={() => generateInvoicePdf({ invoice: r, client: r.client, company, user: currentUser })}
+          className="py-3 text-sm font-bold text-primary bg-primary/15 hover:bg-primary/25 transition-colors"
+          title="Download PDF"
+        >
+          ↓ PDF
+        </button>
         <button
           onClick={() => onDuplicate(r)}
           className="py-3 text-sm font-bold text-primary bg-primary/15 hover:bg-primary/25 transition-colors"
@@ -92,7 +100,7 @@ function InvoiceCard({ r, onReopen, onDelete, onDuplicate }) {
   );
 }
 
-export default function Search({ onDuplicate }) {
+export default function Search({ onDuplicate, company, currentUser }) {
   const [q, setQ] = useState("");
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -169,6 +177,8 @@ export default function Search({ onDuplicate }) {
               onReopen={setReopenTarget}
               onDelete={setDeleteTarget}
               onDuplicate={onDuplicate}
+              company={company}
+              currentUser={currentUser}
             />
           ))}
         </div>
