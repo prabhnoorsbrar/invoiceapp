@@ -51,25 +51,25 @@ function ClientEditModal({ client, onSave, onDelete, onClose }) {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="form-control">
             <label className="label pb-1"><span className="label-text font-semibold">Name</span></label>
-            <input className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
+            <input className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none px-4" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
           </div>
           <div className="form-control">
             <label className="label pb-1"><span className="label-text font-semibold">Billing Address</span></label>
-            <textarea className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none" rows={3} value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} />
+            <textarea className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none px-4 py-3" rows={3} value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} />
           </div>
           <div className="form-control">
             <label className="label pb-1">
               <span className="label-text font-semibold">Invoice To (emailTo)</span>
               <span className="label-text-alt text-base-content/40">Comma separated</span>
             </label>
-            <textarea className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none" rows={2} placeholder="billing@client.com, ap@client.com" value={form.emailTo} onChange={(e) => setForm((f) => ({ ...f, emailTo: e.target.value }))} />
+            <textarea className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none px-4 py-3" rows={2} placeholder="billing@client.com, ap@client.com" value={form.emailTo} onChange={(e) => setForm((f) => ({ ...f, emailTo: e.target.value }))} />
           </div>
           <div className="form-control">
             <label className="label pb-1">
               <span className="label-text font-semibold">CC</span>
               <span className="label-text-alt text-base-content/40">Comma separated</span>
             </label>
-            <textarea className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none" rows={2} placeholder="manager@client.com" value={form.cc} onChange={(e) => setForm((f) => ({ ...f, cc: e.target.value }))} />
+            <textarea className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none px-4 py-3" rows={2} placeholder="manager@client.com" value={form.cc} onChange={(e) => setForm((f) => ({ ...f, cc: e.target.value }))} />
           </div>
           <div className="form-control">
             <label className="label pb-1"><span className="label-text font-semibold">Net Terms (days)</span></label>
@@ -197,20 +197,20 @@ export default function Settings({ currentUser, onUserUpdate }) {
         <form onSubmit={handleAccountSave} className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-6 space-y-4 max-w-sm">
           <div className="form-control">
             <label className="label pb-1"><span className="label-text font-semibold">Email</span></label>
-            <input type="email" className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input type="email" className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none px-4" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="divider text-xs text-base-content/30">Change Password</div>
           <div className="form-control">
             <label className="label pb-1"><span className="label-text font-semibold">Current Password</span></label>
-            <input type="password" className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Required to change password" />
+            <input type="password" className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none px-4" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Required to change password" />
           </div>
           <div className="form-control">
             <label className="label pb-1"><span className="label-text font-semibold">New Password</span></label>
-            <input type="password" className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Min 8 characters" />
+            <input type="password" className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none px-4" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Min 8 characters" />
           </div>
           <div className="form-control">
             <label className="label pb-1"><span className="label-text font-semibold">Confirm New Password</span></label>
-            <input type="password" className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+            <input type="password" className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none px-4" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
           </div>
           {accountMsg && (
             <p className={`text-sm font-medium ${accountMsg.type === "success" ? "text-success" : accountMsg.type === "error" ? "text-error" : "text-base-content/60"}`}>{accountMsg.text}</p>
