@@ -56,7 +56,7 @@ export default function Login({ onSuccess }) {
 
         <button
           type="submit"
-          className="btn btn-primary w-full"
+          className="w-full py-2 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
           disabled={loading}
         >
           {loading ? "Logging in..." : "Log In"}

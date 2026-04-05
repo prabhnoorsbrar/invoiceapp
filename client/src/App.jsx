@@ -46,7 +46,7 @@ export default function App() {
               className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
                 view === item.id
                   ? "bg-primary text-primary-content border-primary"
-                  : "border-base-300 text-base-content/70 hover:bg-base-200 hover:text-base-content hover:border-base-content/30"
+                  : "border-primary/50 text-primary hover:bg-primary/10 hover:border-primary"
               }`}
             >
               {item.label}
@@ -56,7 +56,7 @@ export default function App() {
 
         <button
           onClick={() => { logout(); setAuthed(false); setUser(null); setCompany(null); }}
-          className="btn btn-outline btn-sm"
+          className="px-3 py-1.5 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors"
         >
           Logout
         </button>

@@ -33,8 +33,8 @@ function InvoiceCard({ r, onMarkPaid, onDelete }) {
             <p className="text-xs text-base-content/40 font-semibold uppercase tracking-wider mb-1">Invoice</p>
             <p className="text-xl font-extrabold text-base-content leading-none">#{r.invoiceNumber}</p>
           </div>
-          <div className="text-right shrink-0">
-            <p className="text-xs text-base-content/40 font-semibold uppercase tracking-wider mb-1">Amount</p>
+          <div className="text-right shrink-0 flex flex-col items-end gap-1">
+            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-error/20 text-error border border-error/30">Outstanding</span>
             <p className="text-xl font-extrabold text-primary leading-none">{currency(r.amountCents)}</p>
           </div>
         </div>
@@ -73,13 +73,13 @@ function InvoiceCard({ r, onMarkPaid, onDelete }) {
       <div className="grid grid-cols-2 border-t border-base-300 divide-x divide-base-300">
         <button
           onClick={() => onMarkPaid(r)}
-          className="py-3 text-sm font-semibold text-success hover:bg-success/10 transition-colors"
+          className="py-3 text-sm font-bold text-success bg-success/15 hover:bg-success/25 transition-colors"
         >
           Mark Paid
         </button>
         <button
           onClick={() => onDelete(r)}
-          className="py-3 text-sm font-semibold text-error hover:bg-error/10 transition-colors"
+          className="py-3 text-sm font-bold text-error bg-error/15 hover:bg-error/25 transition-colors"
         >
           Delete
         </button>
@@ -176,8 +176,8 @@ export default function Outstanding() {
       </div>
 
       <div className="flex gap-2">
-        <button onClick={exportOutstanding} className="btn btn-sm btn-outline">Export Outstanding</button>
-        <button onClick={exportYtd} className="btn btn-sm btn-outline">Export YTD</button>
+        <button onClick={exportOutstanding} className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">Export Outstanding</button>
+        <button onClick={exportYtd} className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">Export YTD</button>
       </div>
 
       {loading ? (
@@ -194,7 +194,7 @@ export default function Outstanding() {
             <InvoiceCard
               key={r._id}
               r={r}
-              onMarkPaid={(r) => { setMarkPaidTarget(r); setPaidDate(new Date().toISOString().slice(0, 10)); setPaidMethod(""); }}
+              onMarkPaid={(r) => { setMarkPaidTarget(r); setPaidDate((() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })()); setPaidMethod(""); }}
               onDelete={setDeleteTarget}
             />
           ))}
@@ -210,17 +210,17 @@ export default function Outstanding() {
             </div>
             <div className="form-control">
               <label className="label pb-1"><span className="label-text">Paid Date</span></label>
-              <input type="date" className="input input-bordered w-full" value={paidDate} onChange={(e) => setPaidDate(e.target.value)} />
+              <input type="date" className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none" value={paidDate} onChange={(e) => setPaidDate(e.target.value)} />
             </div>
             <div className="form-control">
               <label className="label pb-1">
                 <span className="label-text">Payment Method <span className="text-base-content/30 text-xs">(optional)</span></span>
               </label>
-              <input className="input input-bordered w-full" placeholder="Wire, Cheque…" value={paidMethod} onChange={(e) => setPaidMethod(e.target.value)} />
+              <input className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none" placeholder="Wire, Cheque…" value={paidMethod} onChange={(e) => setPaidMethod(e.target.value)} />
             </div>
             <div className="flex gap-3 justify-end pt-2">
-              <button className="btn btn-ghost" onClick={() => setMarkPaidTarget(null)} disabled={markingPaid}>Cancel</button>
-              <button className="btn btn-success" onClick={confirmMarkPaid} disabled={!paidDate || markingPaid}>
+              <button className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={() => setMarkPaidTarget(null)} disabled={markingPaid}>Cancel</button>
+              <button className="px-4 py-2 rounded-lg bg-success text-success-content text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50" onClick={confirmMarkPaid} disabled={!paidDate || markingPaid}>
                 {markingPaid ? <span className="loading loading-spinner loading-sm" /> : "Confirm"}
               </button>
             </div>
@@ -236,8 +236,8 @@ export default function Outstanding() {
               <strong>#{deleteTarget.invoiceNumber}</strong> · {deleteTarget.client?.name} · {currency(deleteTarget.amountCents)} will be permanently deleted.
             </p>
             <div className="flex gap-3 justify-end pt-2">
-              <button className="btn btn-ghost" onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancel</button>
-              <button className="btn btn-error" onClick={confirmDelete} disabled={deleting}>
+              <button className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancel</button>
+              <button className="px-4 py-2 rounded-lg bg-error text-error-content text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50" onClick={confirmDelete} disabled={deleting}>
                 {deleting ? <span className="loading loading-spinner loading-sm" /> : "Delete"}
               </button>
             </div>
