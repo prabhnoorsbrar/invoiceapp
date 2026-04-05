@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { api } from "../api";
 
 function currency(cents) {
@@ -126,6 +126,8 @@ export default function Outstanding() {
   const [markingPaid, setMarkingPaid] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [clientFilter, setClientFilter] = useState("");
+  const [sortBy, setSortBy] = useState("oldest_due");
   const intervalRef = useRef(null);
 
   useEffect(() => {
@@ -176,6 +178,23 @@ export default function Outstanding() {
     URL.revokeObjectURL(a.href);
   }
 
+  const displayRows = useMemo(() => {
+    let filtered = rows;
+    if (clientFilter.trim()) {
+      const f = clientFilter.toLowerCase();
+      filtered = rows.filter((r) => r.client?.name?.toLowerCase().includes(f));
+    }
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "oldest_due": return (a.dueDate || "") < (b.dueDate || "") ? -1 : 1;
+        case "newest_due": return (a.dueDate || "") > (b.dueDate || "") ? -1 : 1;
+        case "amount_desc": return (b.amountCents || 0) - (a.amountCents || 0);
+        case "client_az": return (a.client?.name || "").localeCompare(b.client?.name || "");
+        default: return 0;
+      }
+    });
+  }, [rows, clientFilter, sortBy]);
+
   function exportOutstanding() {
     downloadCsv("outstanding-invoices.csv",
       ["Invoice #", "Client", "Issued", "Due", "Amount"],
@@ -206,22 +225,42 @@ export default function Outstanding() {
         <KPI label="YTD Collected" value={currency(kpi.ytdIncomeCents)} />
       </div>
 
-      <div className="flex gap-2">
-        <button onClick={exportOutstanding} className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">Export Outstanding</button>
-        <button onClick={exportYtd} className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">Export YTD</button>
+      <div className="flex flex-wrap gap-2 items-center justify-between">
+        <div className="flex gap-2">
+          <button onClick={exportOutstanding} className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">Export Outstanding</button>
+          <button onClick={exportYtd} className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">Export YTD</button>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <input
+            className="input bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none text-sm w-44"
+            placeholder="Filter by client…"
+            value={clientFilter}
+            onChange={(e) => setClientFilter(e.target.value)}
+          />
+          <select
+            className="select bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none text-sm"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="oldest_due">Oldest Due First</option>
+            <option value="newest_due">Newest Due First</option>
+            <option value="amount_desc">Highest Amount</option>
+            <option value="client_az">Client A–Z</option>
+          </select>
+        </div>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-20">
           <span className="loading loading-spinner loading-lg text-primary" />
         </div>
-      ) : rows.length === 0 ? (
+      ) : displayRows.length === 0 ? (
         <div className="bg-base-100 rounded-2xl border border-base-300 p-16 text-center">
-          <p className="text-base-content/30 text-sm">No outstanding invoices</p>
+          <p className="text-base-content/30 text-sm">{rows.length === 0 ? "No outstanding invoices" : "No invoices match your filter"}</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {rows.map((r) => (
+          {displayRows.map((r) => (
             <InvoiceCard
               key={r._id}
               r={r}

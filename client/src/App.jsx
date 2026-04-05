@@ -10,6 +10,7 @@ export default function App() {
   const [view, setView] = useState("outstanding");
   const [user, setUser] = useState(() => getCurrentUser());
   const [company, setCompany] = useState(() => getCurrentCompany());
+  const [prefill, setPrefill] = useState(null);
 
   if (!authed) {
     return (
@@ -64,9 +65,9 @@ export default function App() {
 
       {/* Page content */}
       <main className="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto pb-24 md:pb-6">
-        {view === "create" && <CreateInvoice company={company} currentUser={user} />}
+        {view === "create" && <CreateInvoice company={company} currentUser={user} prefill={prefill} onPrefillConsumed={() => setPrefill(null)} />}
         {view === "outstanding" && <Outstanding />}
-        {view === "search" && <Search />}
+        {view === "search" && <Search onDuplicate={(r) => { setPrefill(r); setView("create"); }} />}
       </main>
 
       {/* Mobile bottom nav */}

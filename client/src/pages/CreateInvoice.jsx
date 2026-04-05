@@ -62,7 +62,7 @@ function createLineItem(overrides = {}) {
 
   return merged;
 }
-export default function CreateInvoice({ company, currentUser }) {
+export default function CreateInvoice({ company, currentUser, prefill, onPrefillConsumed }) {
   const [toast, setToast] = useState(null);
   const toastTimer = React.useRef(null);
 
@@ -101,6 +101,8 @@ export default function CreateInvoice({ company, currentUser }) {
   const [showRouteModal, setShowRouteModal] = useState(false);
   const [routeForm, setRouteForm] = useState(defaultRouteFormState);
   const [savingRoute, setSavingRoute] = useState(false);
+  const prefillRef = React.useRef(prefill);
+
   useEffect(() => {
     (async () => {
       const [list, lastData] = await Promise.all([
@@ -111,6 +113,13 @@ export default function CreateInvoice({ company, currentUser }) {
       const last = lastData?.invoiceNumber;
       const lastNum = last ? parseInt(last, 10) : null;
       setInvoiceNumber(Number.isFinite(lastNum) ? String(lastNum + 1) : last ? last : "1001");
+      // If duplicating, auto-select the client (triggers routes useEffect)
+      const pf = prefillRef.current;
+      if (pf) {
+        const clientId = pf.clientId || pf.client?._id;
+        const client = list.find((c) => c._id === clientId);
+        if (client) setSelectedClient(client);
+      }
     })();
   }, []);
 
@@ -118,7 +127,28 @@ export default function CreateInvoice({ company, currentUser }) {
     if (!selectedClient?._id) return;
     (async () => {
       const r = await api.listRoutesByClient(selectedClient._id);
-      setRoutes(sortRoutesByLabel(r));
+      const sorted = sortRoutesByLabel(r);
+      setRoutes(sorted);
+      // Apply prefill once routes are loaded
+      const pf = prefillRef.current;
+      if (pf && (pf.clientId || pf.client?._id) === selectedClient._id) {
+        const route = sorted.find((rt) => rt._id === pf.routeId);
+        if (route) setSelectedRoute(route);
+        const items = Array.isArray(pf.lineItems) && pf.lineItems.length
+          ? pf.lineItems.map((item, i) => createLineItem({
+              id: i === 0 ? PRIMARY_LINE_ID : undefined,
+              description: item.description || "",
+              amountCents: item.amountCents ?? null,
+            }))
+          : [createLineItem({ id: PRIMARY_LINE_ID, description: pf.description || "", amountCents: pf.amountCents ?? null })];
+        setLineItems(items);
+        setLoadRef(pf.loadRef || "");
+        setOverridePrice(true);
+        setOverrideDescription(true);
+        setStep(3);
+        prefillRef.current = null;
+        onPrefillConsumed?.();
+      }
     })();
   }, [selectedClient]);
   const computedInvoiceDetails = useMemo(() => {
