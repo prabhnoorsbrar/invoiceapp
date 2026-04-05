@@ -1,5 +1,5 @@
 // client/src/api.js
-const base = (import.meta.env?.VITE_API_BASE || "http://localhost:4000").replace(/\/+$/, "");
+const base = (import.meta.env?.VITE_API_BASE || (import.meta.env?.DEV ? "http://localhost:4000" : "")).replace(/\/+$/, "");
 
 let currentUser = null;
 let currentCompany = null;
