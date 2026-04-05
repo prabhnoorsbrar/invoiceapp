@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { requireAuth, requireRole } from "../utils/auth.js";
 import { validate, schemas } from "../utils/validate.js";
-import { list, create, update } from "../controllers/clientsController.js";
+import { list, create, update, remove } from "../controllers/clientsController.js";
 const r = Router();
 r.use(requireAuth);
 r.get("/", list);
 r.post("/", requireRole("admin", "finance"), validate(schemas.createClient), create);
 r.put("/:id", requireRole("admin", "finance"), validate(schemas.updateClient), update);
+r.delete("/:id", requireRole("admin", "finance"), remove);
 export default r;

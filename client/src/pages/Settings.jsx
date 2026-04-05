@@ -8,7 +8,7 @@ function joinEmails(arr) {
   return (arr || []).join(", ");
 }
 
-function ClientEditModal({ client, onSave, onClose }) {
+function ClientEditModal({ client, onSave, onDelete, onClose }) {
   const [form, setForm] = useState({
     name: client.name || "",
     address: client.address || "",
@@ -17,6 +17,8 @@ function ClientEditModal({ client, onSave, onClose }) {
     paymentTermsDays: client.paymentTermsDays ?? 30,
   });
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState("");
 
   async function handleSubmit(e) {
@@ -74,12 +76,35 @@ function ClientEditModal({ client, onSave, onClose }) {
             <input type="number" min={0} max={365} className="input w-28 bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none" value={form.paymentTermsDays} onChange={(e) => setForm((f) => ({ ...f, paymentTermsDays: e.target.value }))} />
           </div>
           {error && <p className="text-error text-sm">{error}</p>}
-          <div className="flex gap-3 justify-end pt-2 border-t border-white/10">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-white/10 text-sm font-semibold hover:bg-white/[0.06] transition-colors" disabled={saving}>Cancel</button>
-            <button type="submit" className="px-5 py-2 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity" disabled={saving}>
-              {saving ? <span className="loading loading-spinner loading-sm" /> : "Save"}
-            </button>
-          </div>
+
+          {confirmDelete ? (
+            <div className="bg-error/10 border border-error/30 rounded-xl p-4 space-y-3">
+              <p className="text-sm font-semibold text-error">Delete <span className="font-bold">{client.name}</span>? This cannot be undone.</p>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setConfirmDelete(false)} className="flex-1 py-2 rounded-lg border border-white/10 text-sm font-semibold hover:bg-white/[0.06] transition-colors" disabled={deleting}>Cancel</button>
+                <button
+                  type="button"
+                  className="flex-1 py-2 rounded-lg bg-error text-error-content text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-opacity"
+                  disabled={deleting}
+                  onClick={async () => { setDeleting(true); try { await api.deleteClient(client._id); onDelete(client._id); } catch (e) { setError(e.message); setConfirmDelete(false); } finally { setDeleting(false); } }}
+                >
+                  {deleting ? <span className="loading loading-spinner loading-sm" /> : "Yes, Delete"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-3 pt-2 border-t border-white/10">
+              <button type="button" onClick={() => setConfirmDelete(true)} className="px-4 py-2 rounded-lg bg-red-600 border border-red-500 text-white text-sm font-bold hover:bg-red-500 active:bg-red-700 shadow-[0_0_12px_rgba(239,68,68,0.4)] hover:shadow-[0_0_18px_rgba(239,68,68,0.6)] transition-all">
+                Delete Client
+              </button>
+              <div className="flex gap-2 ml-auto">
+                <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-white/10 text-sm font-semibold hover:bg-white/[0.06] transition-colors" disabled={saving}>Cancel</button>
+                <button type="submit" className="px-5 py-2 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity" disabled={saving}>
+                  {saving ? <span className="loading loading-spinner loading-sm" /> : "Save"}
+                </button>
+              </div>
+            </div>
+          )}
         </form>
       </div>
     </div>
@@ -200,6 +225,7 @@ export default function Settings({ currentUser, onUserUpdate }) {
         <ClientEditModal
           client={editTarget}
           onSave={(updated) => { setClients((prev) => prev.map((c) => c._id === updated._id ? updated : c)); setEditTarget(null); }}
+          onDelete={(id) => { setClients((prev) => prev.filter((c) => c._id !== id)); setEditTarget(null); }}
           onClose={() => setEditTarget(null)}
         />
       )}

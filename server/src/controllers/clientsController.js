@@ -16,6 +16,15 @@ export const create = asyncHandler(async (req, res) => {
   res.json(row);
 });
 
+export const remove = asyncHandler(async (req, res) => {
+  const { companyId } = req.user;
+  const client = await Client.findOne({ _id: req.params.id, companyId });
+  if (!client) return res.status(404).json({ error: "Not found" });
+  client.active = false;
+  await client.save();
+  res.json({ ok: true });
+});
+
 export const update = asyncHandler(async (req, res) => {
   const { companyId } = req.user;
   const client = await Client.findOne({ _id: req.params.id, companyId });

@@ -110,6 +110,9 @@ export const api = {
   updateClient(id, payload) {
     return request(`/api/clients/${encodeURIComponent(id)}`, { method: "PUT", body: payload });
   },
+  deleteClient(id) {
+    return request(`/api/clients/${encodeURIComponent(id)}`, { method: "DELETE" });
+  },
   updateMe(payload) {
     return request(`/api/auth/me`, { method: "PUT", body: payload });
   },
