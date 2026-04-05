@@ -71,102 +71,98 @@ export default function InvoicePreview({ company, user, client, invoice }) {
 
   return (
     <div className="w-full max-w-md">
-      <div ref={previewRef} className="bg-white text-black rounded-lg shadow-lg p-6">
-        <div className="text-sm text-gray-500 mb-2 font-medium" data-html2canvas-ignore="true">
-          Invoice Preview
-        </div>
+      <div className="bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] rounded-2xl overflow-hidden shadow-xl">
 
-        <div className="mb-4">
-          <div className="font-bold text-lg">{businessName}</div>
-          {street && <div>{street}</div>}
-          {cityStateZip && <div>{cityStateZip}</div>}
-          {phone && <div>{phone}</div>}
-        </div>
-
-        <div className="flex justify-between text-sm mb-4">
-          <div>
-            <div className="text-gray-600">Invoice #</div>
-            <div className="font-semibold">
-              {invoiceNumber || <span className="text-gray-400" data-html2canvas-ignore="true">TBD</span>}
-            </div>
+        {/* Header */}
+        <div className="px-5 pt-5 pb-4 border-b border-white/[0.08]">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-base-content/30">Preview</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">{businessName}</span>
           </div>
-          <div>
-            <div className="text-gray-600">Date</div>
-            <div className="font-semibold">
-              {formattedInvoiceDate || <span className="text-gray-400" data-html2canvas-ignore="true">—</span>}
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-base-content/30 mb-0.5">Invoice</p>
+              <p className="text-2xl font-extrabold text-base-content leading-none">
+                {invoiceNumber ? `#${invoiceNumber}` : <span className="text-base-content/20">—</span>}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-base-content/30 mb-0.5">Date</p>
+              <p className="text-sm font-semibold text-base-content/70">
+                {formattedInvoiceDate || <span className="text-base-content/20">—</span>}
+              </p>
             </div>
           </div>
         </div>
 
-        <hr className="my-3" />
-        <div className="text-sm mb-3">
-          <div className="font-semibold">Bill To</div>
-          <div className="font-medium">
-            {client?.name ? client.name : <span className="text-gray-400" data-html2canvas-ignore="true">—</span>}
+        <div className="px-5 py-4 space-y-4">
+          {/* Bill To */}
+          <div className="bg-white/[0.04] rounded-xl px-4 py-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-base-content/30 mb-1">Bill To</p>
+            <p className="text-sm font-bold text-base-content">
+              {client?.name || <span className="text-base-content/20">—</span>}
+            </p>
+            {client?.address && (
+              <p className="text-xs text-base-content/40 whitespace-pre-line mt-0.5">{client.address}</p>
+            )}
+            {client?.paymentTermsDays && (
+              <p className="text-xs text-base-content/30 mt-1">Net {client.paymentTermsDays}</p>
+            )}
           </div>
-          <div className="text-gray-600 whitespace-pre-line">{client?.address || ""}</div>
-          {client?.paymentTermsDays && <div className="text-gray-500 mt-1">Terms: Net {client.paymentTermsDays}</div>}
-        </div>
 
-        <div className="text-sm mb-4" data-html2canvas-ignore={loadRef ? undefined : "true"}>
-          <span className="font-medium">Load/Ref:</span>{" "}
-          {loadRef || <span className="text-gray-400" data-html2canvas-ignore="true">—</span>}
-        </div>
-
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-1">Description</th>
-              <th className="text-right py-1">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoiceLineItems.map((item, index) => {
-              const amount = typeof item.amountCents === "number" && Number.isFinite(item.amountCents) ? item.amountCents : 0;
-              const hasDescription = Boolean(item.description);
-              const hasAmount = amount > 0;
-              const hideRow = !item.isPrimary && !hasDescription && !hasAmount;
-              if (hideRow) return null;
-              return (
-                <tr key={item.id || index}>
-                  <td className="py-1 align-top">
-                    {hasDescription ? item.description : (
-                      <span className="text-gray-400" data-html2canvas-ignore="true">
-                        {item.isPrimary ? "Describe the load…" : "Add a description"}
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-1 text-right align-top">{currency(amount)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-          <tfoot className="border-t font-semibold">
-            <tr>
-              <td className="text-right py-1">Total</td>
-              <td className="text-right py-1">{currency(totalCents)}</td>
-            </tr>
-          </tfoot>
-        </table>
-
-        <p className="mt-6 text-xs text-gray-500 italic">
-          Make payments to {businessName}.
-          {hasContactName || hasPhone ? (
-            <> Feel free to reach out to {hasContactName ? contactName : null}{hasContactName && hasPhone ? ` @ ${phone}` : null}{!hasContactName && hasPhone ? `at ${phone}` : null} for any inquiries or concerns.</>
-          ) : (
-            <span className="text-gray-400" data-html2canvas-ignore="true"> Feel free to reach out to your contact.</span>
+          {/* Load ref */}
+          {loadRef && (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-base-content/30">Ref</span>
+              <span className="text-xs text-base-content/60 font-medium">{loadRef}</span>
+            </div>
           )}
-        </p>
+
+          {/* Line items */}
+          <div>
+            <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-base-content/30 pb-2 border-b border-white/[0.06]">
+              <span>Description</span>
+              <span>Amount</span>
+            </div>
+            <div className="space-y-2 mt-2">
+              {invoiceLineItems.map((item, index) => {
+                const amount = typeof item.amountCents === "number" && Number.isFinite(item.amountCents) ? item.amountCents : 0;
+                const hasDescription = Boolean(item.description);
+                const hasAmount = amount > 0;
+                if (!item.isPrimary && !hasDescription && !hasAmount) return null;
+                return (
+                  <div key={item.id || index} className="flex justify-between gap-3 text-sm">
+                    <span className={`leading-snug ${hasDescription ? "text-base-content/80" : "text-base-content/20 italic"}`}>
+                      {hasDescription ? item.description : "Describe the load…"}
+                    </span>
+                    <span className={`shrink-0 font-semibold tabular-nums ${hasAmount ? "text-primary" : "text-base-content/20"}`}>
+                      {currency(amount)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Total */}
+        <div className="mx-5 mb-5 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-base-content/40">Total</span>
+          <span className="text-xl font-extrabold text-primary">{currency(totalCents)}</span>
+        </div>
       </div>
 
-      <div className="mt-4 flex gap-2">
-        <button onClick={() => window.print()} className="px-4 py-2 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">
-          Print
-        </button>
-        <button onClick={handleDownloadPdf} className="px-4 py-2 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">
-          Download PDF
-        </button>
-      </div>
+      <button
+        onClick={handleDownloadPdf}
+        className="mt-3 w-full py-3 rounded-2xl flex items-center justify-center gap-2 bg-primary/15 border border-primary/30 text-sm font-bold text-primary hover:bg-primary/25 hover:border-primary/50 active:bg-primary/35 transition-all duration-150 backdrop-blur-sm"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        Download PDF
+      </button>
     </div>
   );
 }

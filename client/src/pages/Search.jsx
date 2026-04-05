@@ -14,8 +14,12 @@ function formatDate(value, fallback = "-") {
 function InvoiceCard({ r, onReopen, onDelete, onDuplicate, company, currentUser }) {
   const isPaid = r.status === "paid";
   return (
-    <div className="bg-base-100 rounded-2xl border border-base-300 overflow-hidden flex flex-col hover:border-base-content/20 transition-all hover:shadow-lg">
-      <div className={`h-1 w-full ${isPaid ? "bg-success/70" : "bg-error/70"}`} />
+    <div className={`backdrop-blur-sm rounded-2xl border overflow-hidden flex flex-col transition-all ${
+      isPaid
+        ? "bg-emerald-500/[0.07] border-emerald-500/25 hover:bg-emerald-500/[0.12] hover:border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.07)] hover:shadow-[0_0_28px_rgba(16,185,129,0.14)]"
+        : "bg-white/[0.07] border-white/[0.12] hover:bg-white/[0.11] hover:border-white/[0.20] hover:shadow-2xl"
+    }`}>
+      <div className={`w-full h-[3px] ${isPaid ? "bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.7)]" : "bg-primary/50"}`} />
 
       <div className="p-5 flex flex-col gap-4 flex-1">
         <div className="flex items-start justify-between gap-3">
@@ -30,7 +34,7 @@ function InvoiceCard({ r, onReopen, onDelete, onDuplicate, company, currentUser 
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="bg-base-200 rounded-xl px-3 py-2 flex-1 min-w-0 mr-2">
+          <div className="bg-white/[0.06] rounded-xl px-3 py-2 flex-1 min-w-0 mr-2">
             <p className="text-xs text-base-content/40 mb-0.5">Client</p>
             <p className="text-sm font-semibold text-base-content truncate">{r.client?.name || "-"}</p>
           </div>
@@ -43,7 +47,7 @@ function InvoiceCard({ r, onReopen, onDelete, onDuplicate, company, currentUser 
           {r.description || <span className="italic">No description</span>}
         </p>
 
-        <div className="flex justify-between text-xs text-base-content/40 border-t border-base-300 pt-3">
+        <div className="flex justify-between text-xs text-base-content/40 border-t border-white/[0.08] pt-3">
           <div>
             <p className="font-semibold text-base-content/30 uppercase tracking-wider text-[10px]">Issued</p>
             <p className="text-base-content/60 font-medium mt-0.5">{formatDate(r.invoiceDate)}</p>
@@ -67,31 +71,31 @@ function InvoiceCard({ r, onReopen, onDelete, onDuplicate, company, currentUser 
         )}
       </div>
 
-      <div className={`grid border-t border-base-300 divide-x divide-base-300 ${isPaid ? "grid-cols-4" : "grid-cols-3"}`}>
+      <div className={`flex gap-2 px-3 pb-3 pt-2 border-t ${isPaid ? "border-emerald-500/20" : "border-white/[0.08]"}`}>
         {isPaid && (
           <button
             onClick={() => onReopen(r)}
-            className="py-3 text-sm font-bold text-warning bg-warning/15 hover:bg-warning/25 transition-colors"
+            className="flex-1 py-2 rounded-lg text-xs font-bold text-warning bg-warning/10 border border-warning/30 hover:bg-warning/25 hover:border-warning/50 active:bg-warning/35 transition-all duration-150"
           >
-            Unmark Paid
+            Unmark
           </button>
         )}
         <button
           onClick={() => generateInvoicePdf({ invoice: r, client: r.client, company, user: currentUser })}
-          className="py-3 text-sm font-bold text-primary bg-primary/15 hover:bg-primary/25 transition-colors"
+          className="flex-1 py-2 rounded-lg text-xs font-bold text-primary bg-primary/10 border border-primary/30 hover:bg-primary/25 hover:border-primary/50 active:bg-primary/35 transition-all duration-150"
           title="Download PDF"
         >
           ↓ PDF
         </button>
         <button
           onClick={() => onDuplicate(r)}
-          className="py-3 text-sm font-bold text-primary bg-primary/15 hover:bg-primary/25 transition-colors"
+          className="flex-1 py-2 rounded-lg text-xs font-bold text-primary bg-primary/10 border border-primary/30 hover:bg-primary/25 hover:border-primary/50 active:bg-primary/35 transition-all duration-150"
         >
           Duplicate
         </button>
         <button
           onClick={() => onDelete(r)}
-          className="py-3 text-sm font-bold text-error bg-error/15 hover:bg-error/25 transition-colors"
+          className="flex-1 py-2 rounded-lg text-xs font-bold text-error bg-error/10 border border-error/30 hover:bg-error/25 hover:border-error/50 active:bg-error/35 transition-all duration-150"
         >
           Delete
         </button>
@@ -163,7 +167,7 @@ export default function Search({ onDuplicate, company, currentUser }) {
       </form>
 
       {searched && !loading && rows.length === 0 && (
-        <div className="bg-base-100 rounded-2xl border border-base-300 p-16 text-center">
+        <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.08] p-16 text-center">
           <p className="text-base-content/30 text-sm">No invoices found for &ldquo;{q}&rdquo;</p>
         </div>
       )}
@@ -185,8 +189,8 @@ export default function Search({ onDuplicate, company, currentUser }) {
       )}
 
       {reopenTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-base-100 rounded-2xl p-6 w-full max-w-sm border border-base-300 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-base-100/80 backdrop-blur-xl rounded-2xl p-6 w-full max-w-sm border border-white/10 shadow-2xl space-y-4">
             <h3 className="text-lg font-bold text-base-content">Unmark as Paid?</h3>
             <p className="text-sm text-base-content/50">
               <strong>#{reopenTarget.invoiceNumber}</strong> · {reopenTarget.client?.name} will be moved back to outstanding.
@@ -202,8 +206,8 @@ export default function Search({ onDuplicate, company, currentUser }) {
       )}
 
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-base-100 rounded-2xl p-6 w-full max-w-sm border border-base-300 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-base-100/80 backdrop-blur-xl rounded-2xl p-6 w-full max-w-sm border border-white/10 shadow-2xl space-y-4">
             <h3 className="text-lg font-bold text-base-content">Delete Invoice?</h3>
             <p className="text-sm text-base-content/50">
               <strong>#{deleteTarget.invoiceNumber}</strong> · {deleteTarget.client?.name} · {currency(deleteTarget.amountCents)} will be permanently deleted.
