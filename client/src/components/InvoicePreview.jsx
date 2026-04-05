@@ -383,12 +383,17 @@ export default function InvoicePreview({ company, user, client, invoice }) {
     addFooter();
 
     const filename = invoiceNumber ? `Invoice ${invoiceNumber}.pdf` : "Invoice Preview.pdf";
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      pdf.output("dataurlnewwindow");
-    } else {
-      pdf.save(filename);
-    }
+    const blob = pdf.output("blob");
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
   }, [
     businessName,
     cityStateZip,
