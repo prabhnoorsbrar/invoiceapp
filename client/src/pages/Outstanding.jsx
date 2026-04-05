@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { api } from "../api";
 import { generateInvoicePdf } from "../utils/generateInvoicePdf";
+import EmailInvoiceModal from "../components/EmailInvoiceModal";
 
 function currency(cents) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
@@ -210,7 +211,7 @@ function EditInvoiceModal({ invoice, onSave, onClose }) {
   );
 }
 
-function InvoiceCard({ r, onMarkPaid, onDelete, onEdit, company, currentUser, selected, onToggleSelect }) {
+function InvoiceCard({ r, onMarkPaid, onDelete, onEdit, onEmail, company, currentUser, selected, onToggleSelect }) {
   const overdue = daysOverdue(r.dueDate);
   const isOverdue = overdue !== null && overdue > 0;
   const isDueToday = overdue === 0;
@@ -300,13 +301,20 @@ function InvoiceCard({ r, onMarkPaid, onDelete, onEdit, company, currentUser, se
       </div>
 
       {/* Buttons */}
-      <div className={`flex gap-2 px-3 pb-3 pt-2 border-t ${isOverdue ? "border-red-500/20" : isDueToday ? "border-amber-500/20" : "border-white/[0.08]"}`}>
+      <div className={`flex gap-1.5 px-3 pb-3 pt-2 border-t flex-wrap ${isOverdue ? "border-red-500/20" : isDueToday ? "border-amber-500/20" : "border-white/[0.08]"}`}>
         <button
           onClick={() => generateInvoicePdf({ invoice: { ...r, lineItems: r.lineItems }, client: r.client, company, user: currentUser })}
           className="flex-1 py-2 rounded-lg text-xs font-bold text-primary bg-primary/10 border border-primary/30 hover:bg-primary/25 hover:border-primary/50 active:bg-primary/35 transition-all duration-150"
           title="Download PDF"
         >
           ↓ PDF
+        </button>
+        <button
+          onClick={() => onEmail(r)}
+          className="flex-1 py-2 rounded-lg text-xs font-bold text-violet-400 bg-violet-500/10 border border-violet-500/30 hover:bg-violet-500/25 hover:border-violet-500/50 transition-all duration-150 flex items-center justify-center"
+          title="Send Email"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
         </button>
         <button
           onClick={() => onEdit(r)}
@@ -342,6 +350,7 @@ export default function Outstanding({ company, currentUser, onCountChange }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
+  const [emailTarget, setEmailTarget] = useState(null);
   const [clientFilter, setClientFilter] = useState("");
   const [sortBy, setSortBy] = useState("oldest_due");
   const [selected, setSelected] = useState(new Set());
@@ -538,6 +547,7 @@ export default function Outstanding({ company, currentUser, onCountChange }) {
               onMarkPaid={(r) => { setMarkPaidTarget(r); setPaidDate(todayStr()); setPaidMethod(""); }}
               onDelete={setDeleteTarget}
               onEdit={setEditTarget}
+              onEmail={setEmailTarget}
               company={company}
               currentUser={currentUser}
               selected={selected.has(r._id)}
@@ -630,6 +640,17 @@ export default function Outstanding({ company, currentUser, onCountChange }) {
             setEditTarget(null);
           }}
           onClose={() => setEditTarget(null)}
+        />
+      )}
+
+      {/* Email invoice modal */}
+      {emailTarget && (
+        <EmailInvoiceModal
+          invoice={emailTarget}
+          client={emailTarget.client}
+          company={company}
+          currentUser={currentUser}
+          onClose={() => setEmailTarget(null)}
         />
       )}
     </div>
