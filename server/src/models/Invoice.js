@@ -12,6 +12,14 @@ const InvoiceSchema = new mongoose.Schema(
     loadRef: String,
     description: { type: String, required: true },
     amountCents: { type: Number, required: true, min: 1 },
+    lineItems: [
+      {
+        id: String,
+        description: String,
+        amountCents: Number,
+        isPrimary: Boolean,
+      },
+    ],
     invoiceDate: { type: Date, required: true },
     dueDate: { type: Date, required: true },
     status: {
