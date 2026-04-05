@@ -85,26 +85,43 @@ export default function App() {
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-white/[0.08]" style={{ background: "rgba(5,6,10,0.80)", backdropFilter: "blur(20px)" }}>
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-white/[0.08]" style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.18) 0%, rgba(109,40,217,0.16) 50%, rgba(5,6,10,0.85) 100%)", backdropFilter: "blur(24px)" }}>
         <div className="flex items-center justify-around h-16 px-2">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setView(item.id)}
-              className="flex-1 flex flex-col items-center justify-center"
-            >
-              <div className={`flex flex-col items-center gap-1 px-5 py-1.5 rounded-2xl transition-all duration-200 ${
-                view === item.id ? "bg-primary/20 border border-primary/30" : ""
-              }`}>
-                <span className={`text-lg leading-none transition-colors duration-200 ${view === item.id ? "text-primary" : "text-base-content/30"}`}>
-                  {item.icon}
-                </span>
-                <span className={`text-[10px] font-bold uppercase tracking-wider transition-colors duration-200 ${view === item.id ? "text-primary" : "text-base-content/25"}`}>
-                  {item.label}
-                </span>
-              </div>
-            </button>
-          ))}
+          {navItems.map((item) => {
+            const isCreate = item.id === "create";
+            const isActive = view === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setView(item.id)}
+                className="flex-1 flex flex-col items-center justify-center"
+              >
+                {isCreate ? (
+                  <div className="flex flex-col items-center gap-1">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition-all duration-200 shadow-lg ${
+                      isActive
+                        ? "bg-primary shadow-[0_0_18px_rgba(59,130,246,0.6)] scale-110"
+                        : "bg-primary/80 shadow-[0_0_12px_rgba(59,130,246,0.35)] hover:scale-105"
+                    }`}>
+                      <span className="text-white leading-none">{item.icon}</span>
+                    </div>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? "text-primary" : "text-base-content/40"}`}>{item.label}</span>
+                  </div>
+                ) : (
+                  <div className={`flex flex-col items-center gap-1 px-5 py-1.5 rounded-2xl transition-all duration-200 ${
+                    isActive ? "bg-primary/20 border border-primary/30" : ""
+                  }`}>
+                    <span className={`text-lg leading-none transition-colors duration-200 ${isActive ? "text-primary" : "text-base-content/30"}`}>
+                      {item.icon}
+                    </span>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider transition-colors duration-200 ${isActive ? "text-primary" : "text-base-content/25"}`}>
+                      {item.label}
+                    </span>
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       </nav>
     </div>
