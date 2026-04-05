@@ -154,18 +154,6 @@ export const api = {
   updateInvoice(id, payload) {
     return request(`/api/invoices/${encodeURIComponent(id)}`, { method: "PATCH", body: payload });
   },
-  async emailInvoice(id, formData) {
-    const res = await fetch(`${base}/api/invoices/${encodeURIComponent(id)}/email`, {
-      method: "POST",
-      credentials: "include",
-      body: formData, // multipart — no Content-Type header, browser sets boundary
-    });
-    const text = await res.text();
-    let data = null;
-    try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-    if (!res.ok) throw new Error((data && (data.error || data.message)) || `HTTP ${res.status}`);
-    return data;
-  },
   deleteInvoice(id) {
     return request(`/api/invoices/${encodeURIComponent(id)}`, { method: "DELETE" });
   },

@@ -105,7 +105,7 @@ export const listOutstanding = asyncHandler(async (req, res) => {
     status: 'outstanding',
   })
     .sort({ invoiceDate: 1 })
-    .populate({ path: 'clientId', select: 'name address paymentTermsDays' })
+    .populate({ path: 'clientId', select: 'name address paymentTermsDays emailTo cc' })
     .lean()
 
   res.json(
@@ -137,7 +137,7 @@ export const search = asyncHandler(async (req, res) => {
   })
     .sort({ invoiceDate: -1 })
     .limit(200)
-    .populate({ path: 'clientId', select: 'name address paymentTermsDays' })
+    .populate({ path: 'clientId', select: 'name address paymentTermsDays emailTo cc' })
     .lean()
 
   res.json(
@@ -214,7 +214,7 @@ export const update = asyncHandler(async (req, res) => {
   }
 
   const populated = await Invoice.findById(existing._id)
-    .populate({ path: 'clientId', select: 'name address paymentTermsDays' })
+    .populate({ path: 'clientId', select: 'name address paymentTermsDays emailTo cc' })
     .lean()
   const { clientId, ...rest } = populated
   res.json({ ...rest, client: clientId })
