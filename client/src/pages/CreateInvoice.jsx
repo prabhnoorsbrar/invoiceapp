@@ -80,9 +80,10 @@ export default function CreateInvoice({ company, currentUser }) {
   const [selectedRoute, setSelectedRoute] = useState(null);
 
   const [invoiceNumber, setInvoiceNumber] = useState("…");
-  const [invoiceDate, setInvoiceDate] = useState(
-    new Date().toISOString().slice(0, 10)
-  );
+  const [invoiceDate, setInvoiceDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  });
   const [loadRef, setLoadRef] = useState("");
   const [overridePrice, setOverridePrice] = useState(false);
   const [overrideDescription, setOverrideDescription] = useState(false);

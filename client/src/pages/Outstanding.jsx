@@ -33,8 +33,8 @@ function InvoiceCard({ r, onMarkPaid, onDelete }) {
             <p className="text-xs text-base-content/40 font-semibold uppercase tracking-wider mb-1">Invoice</p>
             <p className="text-xl font-extrabold text-base-content leading-none">#{r.invoiceNumber}</p>
           </div>
-          <div className="text-right shrink-0">
-            <p className="text-xs text-base-content/40 font-semibold uppercase tracking-wider mb-1">Amount</p>
+          <div className="text-right shrink-0 flex flex-col items-end gap-1">
+            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-error/20 text-error border border-error/30">Outstanding</span>
             <p className="text-xl font-extrabold text-primary leading-none">{currency(r.amountCents)}</p>
           </div>
         </div>
@@ -194,7 +194,7 @@ export default function Outstanding() {
             <InvoiceCard
               key={r._id}
               r={r}
-              onMarkPaid={(r) => { setMarkPaidTarget(r); setPaidDate(new Date().toISOString().slice(0, 10)); setPaidMethod(""); }}
+              onMarkPaid={(r) => { setMarkPaidTarget(r); setPaidDate((() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })()); setPaidMethod(""); }}
               onDelete={setDeleteTarget}
             />
           ))}
