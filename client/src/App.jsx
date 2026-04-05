@@ -46,7 +46,7 @@ export default function App() {
               className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
                 view === item.id
                   ? "bg-primary text-primary-content border-primary"
-                  : "border-base-300 text-base-content/70 hover:bg-base-200 hover:text-base-content hover:border-base-content/30"
+                  : "border-primary/50 text-primary hover:bg-primary/10 hover:border-primary"
               }`}
             >
               {item.label}

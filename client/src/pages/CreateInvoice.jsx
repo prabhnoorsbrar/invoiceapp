@@ -420,7 +420,7 @@ export default function CreateInvoice({ company, currentUser }) {
               <div className="flex items-center justify-between mb-2">
                 <h1 className="text-xl font-semibold">Pick a Bill-To</h1>
                 <button
-                  className="px-3 py-1.5 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors"
+                  className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity"
                   onClick={() => setShowClientModal(true)}
                 >
                   + Add
@@ -449,7 +449,7 @@ export default function CreateInvoice({ company, currentUser }) {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h1 className="text-xl font-semibold">Pick a Route</h1>
-                <button className="px-3 py-1.5 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={openRouteModal}>
+                <button className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity" onClick={openRouteModal}>
                   + Add Route
                 </button>
               </div>
@@ -485,7 +485,7 @@ export default function CreateInvoice({ company, currentUser }) {
                     </button>
                   );
                 })}
-                <button className="px-3 py-1.5 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors mt-3" onClick={() => setStep(1)}>
+                <button className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity mt-3" onClick={() => setStep(1)}>
                   ← Back to Bill-To
                 </button>
               </div>
@@ -606,7 +606,7 @@ export default function CreateInvoice({ company, currentUser }) {
                   <h2 className="text-lg font-semibold">Additional Line Items</h2>
                   <button
                     type="button"
-                    className="px-3 py-1.5 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity"
                     onClick={handleAddLineItem}
                   >
                     + Add line item

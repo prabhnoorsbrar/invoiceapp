@@ -176,8 +176,8 @@ export default function Outstanding() {
       </div>
 
       <div className="flex gap-2">
-        <button onClick={exportOutstanding} className="px-3 py-1.5 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 hover:border-base-content/60 transition-colors">Export Outstanding</button>
-        <button onClick={exportYtd} className="px-3 py-1.5 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 hover:border-base-content/60 transition-colors">Export YTD</button>
+        <button onClick={exportOutstanding} className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">Export Outstanding</button>
+        <button onClick={exportYtd} className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">Export YTD</button>
       </div>
 
       {loading ? (

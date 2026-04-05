@@ -553,10 +553,10 @@ export default function InvoicePreview({ company, user, client, invoice }) {
       </div>
 
       <div className="mt-4 flex gap-2">
-        <button onClick={() => window.print()} className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors">
+        <button onClick={() => window.print()} className="px-4 py-2 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">
           Print
         </button>
-        <button onClick={handleDownloadPdf} className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors">
+        <button onClick={handleDownloadPdf} className="px-4 py-2 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">
           Download PDF
         </button>
       </div>
