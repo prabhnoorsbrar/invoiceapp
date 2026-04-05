@@ -689,7 +689,7 @@ export default function CreateInvoice({ company, currentUser }) {
                   Create Invoice
                 </button>
                 <button
-                  className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors"
+                  className="px-4 py-2 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity"
                   onClick={() => {
                     setStep(1);
                     setSelectedClient(null);
