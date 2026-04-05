@@ -248,34 +248,34 @@ export default function Outstanding({ company, currentUser }) {
         <KPI label="YTD Collected" value={currency(kpi.ytdIncomeCents)} variant="ytd" />
       </div>
 
-      <div className="flex flex-wrap gap-2 items-center justify-between">
-        <div className="flex gap-2">
-          <button onClick={exportOutstanding} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-sm font-semibold text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all">Export Outstanding</button>
-          <button onClick={exportYtd} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-sm font-semibold text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all">Export YTD</button>
+      <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl px-4 py-3 flex flex-wrap items-center gap-3">
+        <button onClick={exportOutstanding} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-sm font-semibold text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all">Export Outstanding</button>
+        <button onClick={exportYtd} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-sm font-semibold text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all">Export YTD</button>
+
+        <div className="w-px h-5 bg-white/10 hidden sm:block" />
+
+        <div className="relative flex-1 min-w-36">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-base-content/30 pointer-events-none">
+            <circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input
+            className="input w-full bg-white/[0.05] border border-white/10 focus:border-primary/50 focus:bg-white/[0.08] focus:outline-none text-sm pl-8 placeholder:text-base-content/25 transition-all"
+            placeholder="Filter by client…"
+            value={clientFilter}
+            onChange={(e) => setClientFilter(e.target.value)}
+          />
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <div className="relative">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-base-content/30 pointer-events-none">
-              <circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input
-              className="input bg-white/[0.05] border border-white/10 focus:border-primary/50 focus:bg-white/[0.08] focus:outline-none text-sm w-44 pl-8 placeholder:text-base-content/25 transition-all"
-              placeholder="Filter by client…"
-              value={clientFilter}
-              onChange={(e) => setClientFilter(e.target.value)}
-            />
-          </div>
-          <select
-            className="select bg-[#0f1117] border border-white/10 focus:border-primary/50 focus:outline-none text-sm text-base-content/70 transition-all"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="oldest_due">Oldest Due First</option>
-            <option value="newest_due">Newest Due First</option>
-            <option value="amount_desc">Highest Amount</option>
-            <option value="client_az">Client A–Z</option>
-          </select>
-        </div>
+
+        <select
+          className="select bg-[#0f1117] border border-white/10 focus:border-primary/50 focus:outline-none text-sm text-base-content/70 transition-all"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+        >
+          <option value="oldest_due">Oldest Due First</option>
+          <option value="newest_due">Newest Due First</option>
+          <option value="amount_desc">Highest Amount</option>
+          <option value="client_az">Client A–Z</option>
+        </select>
       </div>
 
       {loading ? (

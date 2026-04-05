@@ -155,7 +155,7 @@ export default function Search({ onDuplicate, company, currentUser }) {
       <form onSubmit={handleSearch}>
         <div className="flex gap-2">
           <input
-            className="input flex-1 bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+            className="input flex-1 bg-white/[0.05] border border-white/10 focus:border-primary/50 focus:bg-white/[0.08] focus:outline-none placeholder:text-base-content/25 transition-all"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search by invoice #, client, load ref, description…"

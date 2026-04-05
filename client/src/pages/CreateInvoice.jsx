@@ -546,7 +546,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
               <div className="form-control">
                 <label className="label"><span className="label-text">Invoice #</span></label>
                 <input
-                  className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
+                  className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4"
                   value={invoiceNumber}
                   onChange={(e) => setInvoiceNumber(e.target.value)}
                 />
@@ -556,7 +556,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                 <label className="label"><span className="label-text">Invoice Date</span></label>
                 <input
                   type="date"
-                  className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
+                  className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4"
                   value={invoiceDate}
                   onChange={(e) => setInvoiceDate(e.target.value)}
                 />
@@ -565,14 +565,14 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
               <div className="form-control">
                 <label className="label"><span className="label-text">Load / Ref #</span></label>
                 <input
-                  className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
+                  className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4"
                   value={loadRef}
                   onChange={(e) => setLoadRef(e.target.value)}
                 />
               </div>
 
               <div className="form-control">
-                <label className="label justify-between">
+                <label className="label justify-between gap-4">
                   <span>Main Description</span>
                   <OverrideToggle
                     checked={overrideDescription}
@@ -583,7 +583,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                   />
                 </label>
                 <textarea
-                  className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
+                  className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4 py-3"
                   placeholder="Describe the load…"
                   value={primaryItem.description || ""}
                   onChange={(e) =>
@@ -597,7 +597,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
               </div>
 
               <div className="form-control">
-                <label className="label justify-between">
+                <label className="label justify-between gap-4">
                   <span>Main Amount (USD)</span>
                   <OverrideToggle
                     checked={overridePrice}
@@ -614,7 +614,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                   type="number"
                   inputMode="decimal"
                   step="0.01"
-                  className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
+                  className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4"
                   placeholder="1200.00"
                   value={
                     typeof primaryItem.amountInput === "string"
@@ -658,7 +658,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                           </span>
                         </label>
                         <textarea
-                          className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
+                          className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4 py-3"
                           placeholder="DETENTION RATE"
                           rows={2}
                           value={item.description || ""}
@@ -679,7 +679,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                           type="number"
                           inputMode="decimal"
                           step="0.01"
-                          className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
+                          className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4"
                           placeholder="50.00"
                           value={
                             typeof item.amountInput === "string"
@@ -768,7 +768,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                 <div className="form-control">
                   <label className="label pb-1"><span className="label-text font-semibold">Client name</span></label>
                   <input
-                    className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
+                    className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4"
                     value={clientForm.name}
                     onChange={(e) => handleClientFormChange("name", e.target.value)}
                     required
@@ -790,7 +790,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                 <div className="form-control">
                   <label className="label pb-1"><span className="label-text font-semibold">Billing address</span></label>
                   <textarea
-                    className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
+                    className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4 py-3"
                     rows={3}
                     value={clientForm.address}
                     onChange={(e) => handleClientFormChange("address", e.target.value)}
@@ -802,7 +802,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                     <span className="label-text-alt text-base-content/40">Comma separated</span>
                   </label>
                   <textarea
-                    className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
+                    className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4 py-3"
                     rows={2}
                     value={clientForm.emailTo}
                     onChange={(e) => handleClientFormChange("emailTo", e.target.value)}
@@ -833,7 +833,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                   <div className="form-control">
                     <label className="label pb-1"><span className="label-text font-semibold">Route name</span></label>
                     <input
-                      className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
+                      className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4"
                       placeholder="Chicago → Dallas"
                       value={routeForm.name}
                       onChange={(e) => handleRouteFormChange("name", e.target.value)}
@@ -842,7 +842,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                   <div className="form-control">
                     <label className="label pb-1"><span className="label-text font-semibold">Amount (USD)</span></label>
                     <input
-                      className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
+                      className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4"
                       type="number"
                       inputMode="decimal"
                       step="0.01"
@@ -856,7 +856,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                 <div className="form-control">
                   <label className="label pb-1"><span className="label-text font-semibold">Description</span></label>
                   <textarea
-                    className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
+                    className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4 py-3"
                     rows={3}
                     placeholder="Linehaul from Chicago to Dallas"
                     value={routeForm.description}
