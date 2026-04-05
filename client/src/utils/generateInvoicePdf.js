@@ -130,8 +130,10 @@ export function generateInvoicePdf({ invoice, client, company, user, options }) 
   leftY = addLabelValue("Load reference:", loadRef, col1X, leftY, { skipWhenEmpty: true });
 
   let rightY = y;
-  rightY = addLabelValue("Due date:", dueDate, col2X, rightY, { skipWhenEmpty: true });
-  rightY = addLabelValue("Payment terms:", client?.paymentTermsDays ? `Net ${client.paymentTermsDays}` : null, col2X, rightY, { skipWhenEmpty: true });
+  if (client?.showDueDate !== false) {
+    rightY = addLabelValue("Due date:", dueDate, col2X, rightY, { skipWhenEmpty: true });
+    rightY = addLabelValue("Payment terms:", client?.paymentTermsDays ? `Net ${client.paymentTermsDays}` : null, col2X, rightY, { skipWhenEmpty: true });
+  }
   rightY = addLabelValue("Delivery date:", formattedInvoiceDate, col2X, rightY, { skipWhenEmpty: true });
 
   y = Math.max(leftY, rightY) + 8;
