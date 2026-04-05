@@ -8,11 +8,13 @@ import {
   markPaid,
   reopen,
   kpis,
-  remove
+  remove,
+  lastNumber,
 } from "../controllers/invoicesController.js";
 const r = Router();
 r.use(requireAuth);
 r.get("/kpis", kpis);
+r.get("/last-number", lastNumber);
 r.get("/outstanding", listOutstanding);
 r.get("/search", search);
 r.post("/", requireRole("admin", "finance"), validate(schemas.createInvoice), create);

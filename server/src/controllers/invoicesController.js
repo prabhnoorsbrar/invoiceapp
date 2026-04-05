@@ -175,6 +175,16 @@ export const remove = asyncHandler(async (req, res) => {
   res.json({ success: true });
 });
 
+// GET /api/invoices/last-number
+export const lastNumber = asyncHandler(async (req, res) => {
+  const { companyId } = req.user
+  const latest = await Invoice.findOne({ companyId })
+    .sort({ createdAt: -1 })
+    .select('invoiceNumber')
+    .lean()
+  res.json({ invoiceNumber: latest?.invoiceNumber || null })
+})
+
 // GET /api/invoices/kpis
 export const kpis = asyncHandler(async (req, res) => {
   const { companyId } = req.user

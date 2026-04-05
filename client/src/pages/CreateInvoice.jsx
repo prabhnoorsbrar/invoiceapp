@@ -79,9 +79,7 @@ export default function CreateInvoice({ company, currentUser }) {
   const [selectedClient, setSelectedClient] = useState(null);
   const [selectedRoute, setSelectedRoute] = useState(null);
 
-  const [invoiceNumber, setInvoiceNumber] = useState(
-    () => localStorage.getItem("lastInvoice") || "1000"
-  );
+  const [invoiceNumber, setInvoiceNumber] = useState("…");
   const [invoiceDate, setInvoiceDate] = useState(
     new Date().toISOString().slice(0, 10)
   );
@@ -104,9 +102,14 @@ export default function CreateInvoice({ company, currentUser }) {
   const [savingRoute, setSavingRoute] = useState(false);
   useEffect(() => {
     (async () => {
-      const list = await api.listClients();
-      //console.log("Fetched clients:", list);
+      const [list, lastData] = await Promise.all([
+        api.listClients(),
+        api.lastInvoiceNumber().catch(() => ({ invoiceNumber: null })),
+      ]);
       setClients(list);
+      const last = lastData?.invoiceNumber;
+      const lastNum = last ? parseInt(last, 10) : null;
+      setInvoiceNumber(Number.isFinite(lastNum) ? String(lastNum + 1) : last ? last : "1001");
     })();
   }, []);
 
@@ -117,11 +120,6 @@ export default function CreateInvoice({ company, currentUser }) {
       setRoutes(sortRoutesByLabel(r));
     })();
   }, [selectedClient]);
-  const nextInvoiceNumber = useMemo(
-    () => `${parseInt(invoiceNumber, 10) + 1}`,
-    [invoiceNumber]
-  );
-
   const computedInvoiceDetails = useMemo(() => {
     const normalized = lineItems.map((item, index) => ({
       id: item.id,
@@ -255,8 +253,8 @@ export default function CreateInvoice({ company, currentUser }) {
       const created = await api.createInvoice(payload);
       if (created?._id) {
         showToast(`Invoice ${invoiceNumber} created successfully.`, "success");
-        localStorage.setItem("lastInvoice", invoiceNumber);
-        setInvoiceNumber(nextInvoiceNumber);
+        const n = parseInt(invoiceNumber, 10);
+        setInvoiceNumber(Number.isFinite(n) ? String(n + 1) : invoiceNumber);
         setSelectedClient(null);
         setSelectedRoute(null);
         setRoutes([]);
@@ -433,10 +431,10 @@ export default function CreateInvoice({ company, currentUser }) {
                   <button
                     key={client._id}
                     onClick={() => handleClientSelect(client)}
-                    className="p-4 border rounded-xl text-left hover:shadow"
+                    className="p-4 bg-base-100 border border-base-300 rounded-xl text-left hover:border-primary/50 hover:shadow-lg transition-all"
                   >
-                    <div className="font-medium">{client.name}</div>
-                    <div className="text-sm text-gray-500 whitespace-pre-line">
+                    <div className="font-semibold text-base-content">{client.name}</div>
+                    <div className="text-sm text-base-content/50 whitespace-pre-line mt-1">
                       {client.address}
                     </div>
                   </button>
@@ -456,7 +454,7 @@ export default function CreateInvoice({ company, currentUser }) {
               </div>
               <div className="space-y-3">
                 {routes.length === 0 && (
-                  <div className="rounded-xl border border-dashed p-6 text-center text-sm text-gray-500">
+                  <div className="rounded-xl border border-dashed border-base-300 p-6 text-center text-sm text-base-content/40">
                     {selectedClient
                       ? `No routes found for ${selectedClient.name}. Add a new route to continue.`
                       : "Select a bill-to to manage routes."}
@@ -473,12 +471,12 @@ export default function CreateInvoice({ company, currentUser }) {
                     <button
                       key={route._id}
                       onClick={() => handleRouteSelect(route)}
-                      className="w-full text-left border p-4 rounded-xl hover:shadow"
+                      className="w-full text-left bg-base-100 border border-base-300 p-4 rounded-xl hover:border-primary/50 hover:shadow-lg transition-all"
                     >
-                      <div className="text-sm font-medium mb-1">
+                      <div className="text-sm font-semibold text-base-content mb-1">
                         {route.descriptionTemplate || route.name}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-base-content/50">
                         {latest?.amountCents
                           ? `Suggested: $${(latest.amountCents / 100).toFixed(2)}`
                           : "No price listed"}
@@ -486,7 +484,7 @@ export default function CreateInvoice({ company, currentUser }) {
                     </button>
                   );
                 })}
-                <button className="btn btn-ghost mt-3" onClick={() => setStep(1)}>
+                <button className="btn btn-outline btn-sm mt-3" onClick={() => setStep(1)}>
                   ← Back to Bill-To
                 </button>
               </div>
@@ -498,28 +496,28 @@ export default function CreateInvoice({ company, currentUser }) {
               <h1 className="text-xl font-semibold">Finalize Invoice</h1>
 
               <div className="form-control">
-                <label className="label">Invoice #</label>
+                <label className="label"><span className="label-text">Invoice #</span></label>
                 <input
-                  className="input input-bordered"
+                  className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
                   value={invoiceNumber}
                   onChange={(e) => setInvoiceNumber(e.target.value)}
                 />
               </div>
 
               <div className="form-control">
-                <label className="label">Invoice Date</label>
+                <label className="label"><span className="label-text">Invoice Date</span></label>
                 <input
                   type="date"
-                  className="input input-bordered"
+                  className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
                   value={invoiceDate}
                   onChange={(e) => setInvoiceDate(e.target.value)}
                 />
               </div>
 
               <div className="form-control">
-                <label className="label">Load / Ref #</label>
+                <label className="label"><span className="label-text">Load / Ref #</span></label>
                 <input
-                  className="input input-bordered"
+                  className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
                   value={loadRef}
                   onChange={(e) => setLoadRef(e.target.value)}
                 />
@@ -547,7 +545,7 @@ export default function CreateInvoice({ company, currentUser }) {
                   </label>
                 </label>
                 <textarea
-                  className="textarea textarea-bordered"
+                  className="textarea w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
                   placeholder="Describe the load…"
                   value={primaryItem.description || ""}
                   onChange={(e) =>
@@ -590,7 +588,7 @@ export default function CreateInvoice({ company, currentUser }) {
                   type="number"
                   inputMode="decimal"
                   step="0.01"
-                  className="input input-bordered"
+                  className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
                   placeholder="1200.00"
                   value={
                     typeof primaryItem.amountInput === "string"
@@ -634,7 +632,7 @@ export default function CreateInvoice({ company, currentUser }) {
                           </span>
                         </label>
                         <textarea
-                          className="textarea textarea-bordered"
+                          className="textarea w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
                           placeholder="DETENTION RATE"
                           rows={2}
                           value={item.description || ""}
@@ -655,7 +653,7 @@ export default function CreateInvoice({ company, currentUser }) {
                           type="number"
                           inputMode="decimal"
                           step="0.01"
-                          className="input input-bordered"
+                          className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
                           placeholder="50.00"
                           value={
                             typeof item.amountInput === "string"
@@ -690,8 +688,7 @@ export default function CreateInvoice({ company, currentUser }) {
                   Create Invoice
                 </button>
                 <button
-                  
-                  className="btn btn-ghost"
+                  className="btn btn-outline"
                   onClick={() => {
                     setStep(1);
                     setSelectedClient(null);
@@ -701,7 +698,6 @@ export default function CreateInvoice({ company, currentUser }) {
                     resetLineItems();
                   }}
                 >
-                  
                   Start Over
                 </button>
               
@@ -731,135 +727,96 @@ export default function CreateInvoice({ company, currentUser }) {
       </div>
 
             
-       {showClientModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-full w-full max-w-2xl overflow-y-auto">
-            <div className="relative w-full rounded-2xl bg-gradient-to-br from-sky-50 via-white to-indigo-50 p-6 text-gray-900 shadow-2xl">
-              <button
-                className="btn btn-sm btn-ghost absolute top-3 right-3"
-                onClick={closeClientModal}
-              >
-                ✕
-              </button>
-              <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
+      {showClientModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="max-h-full w-full max-w-lg overflow-y-auto">
+            <div className="bg-base-100 border border-base-300 rounded-2xl shadow-2xl">
+              <div className="flex items-center justify-between p-6 border-b border-base-300">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-indigo-600">Billing details</p>
-                  <h2 className="text-xl font-semibold">Add Bill-To</h2>
+                  <p className="text-xs font-bold uppercase tracking-widest text-base-content/40 mb-1">Billing Details</p>
+                  <h2 className="text-xl font-bold text-base-content">Add Bill-To</h2>
                 </div>
-                <div className="hidden rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 md:block">
-                  New client
-                </div>
+                <button className="btn btn-sm btn-ghost" onClick={closeClientModal}>✕</button>
               </div>
-              <form
-                className="space-y-4 rounded-xl border border-blue-100 bg-blue-50 p-4"
-                onSubmit={handleClientCreate}
-              >
-                <div className="rounded-2xl border border-indigo-100 bg-white p-4 shadow-md">
-                  <div className="grid gap-4">
-                    <div className="grid items-center gap-3 md:grid-cols-[170px_1fr]">
-                      <span className="text-sm font-semibold text-gray-700">Client name</span>
-                      <input
-                        className="input input-bordered w-full border-indigo-100 bg-slate-50 text-gray-900 shadow-sm focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                        value={clientForm.name}
-                        onChange={(e) => handleClientFormChange("name", e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="grid items-center gap-3 md:grid-cols-[170px_1fr]">
-                      <span className="text-sm font-semibold text-gray-700">Payment terms</span>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          min={0}
-                          className="input input-bordered w-28 border-indigo-100 bg-slate-50 text-gray-900 shadow-sm focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                          value={clientForm.paymentTermsDays}
-                          onChange={(e) =>
-                            handleClientFormChange("paymentTermsDays", e.target.value)
-                          }
-                        />
-                        <span className="text-sm text-gray-500">days</span>
-                      </div>
-                    </div>
-                    <div className="grid items-start gap-3 md:grid-cols-[170px_1fr]">
-                      <span className="text-sm font-semibold text-gray-700">Billing address</span>
-                      <textarea
-                        className="textarea textarea-bordered w-full border-indigo-100 bg-slate-50 text-gray-900 shadow-sm focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                        rows={3}
-                        value={clientForm.address}
-                        onChange={(e) => handleClientFormChange("address", e.target.value)}
-                      />
-                    </div>
-                    <div className="grid items-start gap-3 md:grid-cols-[170px_1fr]">
-                      <span className="text-sm font-semibold text-gray-700">
-                        Invoice emails
-                        <span className="block text-xs font-normal text-gray-500">Comma separated</span>
-                      </span>
-                      <textarea
-                        className="textarea textarea-bordered w-full border-indigo-100 bg-slate-50 text-gray-900 shadow-sm focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                        rows={2}
-                        value={clientForm.emailTo}
-                        onChange={(e) => handleClientFormChange("emailTo", e.target.value)}
-                      />
-                    </div>
+              <form className="p-6 space-y-4" onSubmit={handleClientCreate}>
+                <div className="form-control">
+                  <label className="label pb-1"><span className="label-text font-semibold">Client name</span></label>
+                  <input
+                    className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                    value={clientForm.name}
+                    onChange={(e) => handleClientFormChange("name", e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-control">
+                  <label className="label pb-1"><span className="label-text font-semibold">Payment terms</span></label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min={0}
+                      className="input w-28 bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                      value={clientForm.paymentTermsDays}
+                      onChange={(e) => handleClientFormChange("paymentTermsDays", e.target.value)}
+                    />
+                    <span className="text-sm text-base-content/50">days</span>
                   </div>
                 </div>
-                
-                <p className="text-sm text-gray-500">
-                  After saving the bill-to you'll be prompted to add or pick a route.
-                </p>
-
-                <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
-                  <button
-                    type="button"
-                    className="btn btn-ghost sm:min-w-[120px]"
-                    onClick={closeClientModal}
-                    disabled={savingClient}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary sm:min-w-[120px]"
-                    disabled={savingClient}
-                  >
-                    {savingClient ? "Saving…" : "Save Bill-To"}
+                <div className="form-control">
+                  <label className="label pb-1"><span className="label-text font-semibold">Billing address</span></label>
+                  <textarea
+                    className="textarea w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                    rows={3}
+                    value={clientForm.address}
+                    onChange={(e) => handleClientFormChange("address", e.target.value)}
+                  />
+                </div>
+                <div className="form-control">
+                  <label className="label pb-1">
+                    <span className="label-text font-semibold">Invoice emails</span>
+                    <span className="label-text-alt text-base-content/40">Comma separated</span>
+                  </label>
+                  <textarea
+                    className="textarea w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                    rows={2}
+                    value={clientForm.emailTo}
+                    onChange={(e) => handleClientFormChange("emailTo", e.target.value)}
+                  />
+                </div>
+                <p className="text-xs text-base-content/40">After saving you'll be prompted to add or pick a route.</p>
+                <div className="flex gap-3 justify-end pt-2 border-t border-base-300">
+                  <button type="button" className="btn btn-outline" onClick={closeClientModal} disabled={savingClient}>Cancel</button>
+                  <button type="submit" className="btn btn-primary px-6" disabled={savingClient}>
+                    {savingClient ? <span className="loading loading-spinner loading-sm" /> : "Save Bill-To"}
                   </button>
                 </div>
               </form>
             </div>
           </div>
-
-       </div>
+        </div>
       )}
       {showRouteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-full w-full max-w-xl overflow-y-auto">
-            <div className="relative w-full rounded-xl bg-white p-6 text-gray-900 shadow-xl">
-              <button
-                className="btn btn-sm btn-ghost absolute top-3 right-3"
-                onClick={closeRouteModal}
-              >
-                ✕
-              </button>
-              <h2 className="text-xl font-semibold mb-4">Add Route</h2>
-              <form
-                className="space-y-4 rounded-xl border border-blue-100 bg-blue-50 p-4"
-                onSubmit={handleRouteCreate}
-              >
-                <div className="grid md:grid-cols-2 gap-4">
-                  <label className="form-control">
-                    <span className="text-sm font-medium text-gray-700">Route name</span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="max-h-full w-full max-w-lg overflow-y-auto">
+            <div className="bg-base-100 border border-base-300 rounded-2xl shadow-2xl">
+              <div className="flex items-center justify-between p-6 border-b border-base-300">
+                <h2 className="text-xl font-bold text-base-content">Add Route</h2>
+                <button className="btn btn-sm btn-ghost" onClick={closeRouteModal}>✕</button>
+              </div>
+              <form className="p-6 space-y-4" onSubmit={handleRouteCreate}>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="form-control">
+                    <label className="label pb-1"><span className="label-text font-semibold">Route name</span></label>
                     <input
-                      className="input input-bordered text-gray-900"
-                      placeholder="Chicago ➝ Dallas"
+                      className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                      placeholder="Chicago → Dallas"
                       value={routeForm.name}
                       onChange={(e) => handleRouteFormChange("name", e.target.value)}
                     />
-                  </label>
-                  <label className="form-control">
-                    <span className="text-sm font-medium text-gray-700">Amount (USD)</span>
+                  </div>
+                  <div className="form-control">
+                    <label className="label pb-1"><span className="label-text font-semibold">Amount (USD)</span></label>
                     <input
-                      className="input input-bordered text-gray-900"
+                      className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
                       type="number"
                       inputMode="decimal"
                       step="0.01"
@@ -868,30 +825,22 @@ export default function CreateInvoice({ company, currentUser }) {
                       onChange={(e) => handleRouteFormChange("amount", e.target.value)}
                       required
                     />
-                  </label>
+                  </div>
                 </div>
-                <label className="form-control">
-                  <span className="text-sm font-medium text-gray-700">Description</span>
+                <div className="form-control">
+                  <label className="label pb-1"><span className="label-text font-semibold">Description</span></label>
                   <textarea
-                    className="textarea textarea-bordered text-gray-900"
+                    className="textarea w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
                     rows={3}
                     placeholder="Linehaul from Chicago to Dallas"
                     value={routeForm.description}
                     onChange={(e) => handleRouteFormChange("description", e.target.value)}
                   />
-                </label>
-              
-                <div className="flex justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    className="btn btn-ghost"
-                    onClick={closeRouteModal}
-                    disabled={savingRoute}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-primary" disabled={savingRoute}>
-                    {savingRoute ? "Saving…" : "Save Route"}
+                </div>
+                <div className="flex justify-end gap-3 pt-2 border-t border-base-300">
+                  <button type="button" className="btn btn-outline" onClick={closeRouteModal} disabled={savingRoute}>Cancel</button>
+                  <button type="submit" className="btn btn-primary px-6" disabled={savingRoute}>
+                    {savingRoute ? <span className="loading loading-spinner loading-sm" /> : "Save Route"}
                   </button>
                 </div>
               </form>
