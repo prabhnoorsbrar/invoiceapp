@@ -11,11 +11,18 @@ function formatDate(value, fallback = "-") {
   return `${m}/${d}/${y}`;
 }
 
-function KPI({ label, value, sub }) {
+const kpiStyles = {
+  outstanding: { card: "bg-amber-500/[0.07] border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.07)]", label: "text-amber-400/60", value: "text-amber-300" },
+  open:        { card: "bg-blue-500/[0.07] border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.07)]",  label: "text-blue-400/60",  value: "text-blue-300"  },
+  ytd:         { card: "bg-emerald-500/[0.07] border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.07)]", label: "text-emerald-400/60", value: "text-emerald-300" },
+};
+
+function KPI({ label, value, sub, variant = "open" }) {
+  const s = kpiStyles[variant];
   return (
-    <div className="bg-white/[0.06] backdrop-blur-sm rounded-2xl p-6 border border-white/[0.12] shadow-xl flex flex-col gap-2">
-      <p className="text-xs font-bold uppercase tracking-widest text-base-content/40">{label}</p>
-      <p className="text-3xl font-extrabold text-base-content">{value}</p>
+    <div className={`backdrop-blur-sm rounded-2xl p-6 border flex flex-col gap-2 ${s.card}`}>
+      <p className={`text-xs font-bold uppercase tracking-widest ${s.label}`}>{label}</p>
+      <p className={`text-3xl font-extrabold ${s.value}`}>{value}</p>
       {sub && <p className="text-xs text-base-content/30">{sub}</p>}
     </div>
   );
@@ -236,15 +243,15 @@ export default function Outstanding({ company, currentUser }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KPI label="Total Outstanding" value={currency(kpi.outstandingTotalCents)} sub={`${kpi.outstandingCount} open invoice${kpi.outstandingCount !== 1 ? "s" : ""}`} />
-        <KPI label="Open Invoices" value={String(kpi.outstandingCount)} />
-        <KPI label="YTD Collected" value={currency(kpi.ytdIncomeCents)} />
+        <KPI label="Total Outstanding" value={currency(kpi.outstandingTotalCents)} sub={`${kpi.outstandingCount} open invoice${kpi.outstandingCount !== 1 ? "s" : ""}`} variant="outstanding" />
+        <KPI label="Open Invoices" value={String(kpi.outstandingCount)} variant="open" />
+        <KPI label="YTD Collected" value={currency(kpi.ytdIncomeCents)} variant="ytd" />
       </div>
 
       <div className="flex flex-wrap gap-2 items-center justify-between">
         <div className="flex gap-2">
-          <button onClick={exportOutstanding} className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">Export Outstanding</button>
-          <button onClick={exportYtd} className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">Export YTD</button>
+          <button onClick={exportOutstanding} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-sm font-semibold text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all">Export Outstanding</button>
+          <button onClick={exportYtd} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-sm font-semibold text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all">Export YTD</button>
         </div>
         <div className="flex gap-2 flex-wrap">
           <input

@@ -69,7 +69,7 @@ export default function App() {
           </button>
           <button
             onClick={() => { logout(); setAuthed(false); setUser(null); setCompany(null); }}
-            className="px-3 py-1.5 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/10 text-sm font-semibold text-base-content/60 hover:text-base-content hover:bg-white/[0.11] hover:border-white/20 transition-all"
           >
             Logout
           </button>
