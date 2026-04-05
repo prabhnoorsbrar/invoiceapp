@@ -32,7 +32,7 @@ function parseAddress(addressStr) {
   return { street, cityStateZip };
 }
 
-export function generateInvoicePdf({ invoice, client, company, user }) {
+export function generateInvoicePdf({ invoice, client, company, user, options }) {
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageWidth = pdf.internal.pageSize.getWidth();
   const marginLeft = 20;
@@ -227,6 +227,11 @@ export function generateInvoicePdf({ invoice, client, company, user }) {
   pdf.text(businessName, marginLeft + 32, y + 6);
   const contactLine = [contactName, phone].filter(Boolean).join(" @ ");
   if (contactLine) pdf.text(`Contact: ${contactLine}`, marginLeft + 4, y + 12);
+
+  // Return base64 instead of downloading
+  if (options?.returnBase64) {
+    return pdf.output("datauristring"); // "data:application/pdf;base64,..."
+  }
 
   // Download
   const filename = invoiceNumber ? `Invoice ${invoiceNumber}.pdf` : "Invoice.pdf";

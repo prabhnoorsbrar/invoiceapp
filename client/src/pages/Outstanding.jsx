@@ -248,9 +248,11 @@ function InvoiceCard({ r, onMarkPaid, onDelete, onEdit, company, currentUser, se
             </div>
           </div>
           <div className="text-right shrink-0 flex flex-col items-end gap-1">
-            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-              isOverdue ? "bg-red-500/20 text-red-400 border-red-500/30" : isDueToday ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-white/[0.06] text-base-content/50 border-white/10"
-            }`}>Outstanding</span>
+            <div className="flex items-center gap-1.5">
+              <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                isOverdue ? "bg-red-500/20 text-red-400 border-red-500/30" : isDueToday ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-white/[0.06] text-base-content/50 border-white/10"
+              }`}>Outstanding</span>
+            </div>
             <p className="text-xl font-extrabold text-primary leading-none">{currency(r.amountCents)}</p>
           </div>
         </div>
@@ -476,7 +478,6 @@ export default function Outstanding({ company, currentUser, onCountChange }) {
       <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl px-4 py-3 flex flex-wrap items-center gap-3">
         <button onClick={exportOutstanding} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-sm font-semibold text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all">Export Outstanding</button>
         <button onClick={exportYtd} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-sm font-semibold text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all">Export YTD</button>
-
         {selected.size > 0 && (
           <>
             <div className="w-px h-5 bg-white/10" />
@@ -538,6 +539,7 @@ export default function Outstanding({ company, currentUser, onCountChange }) {
               onMarkPaid={(r) => { setMarkPaidTarget(r); setPaidDate(todayStr()); setPaidMethod(""); }}
               onDelete={setDeleteTarget}
               onEdit={setEditTarget}
+
               company={company}
               currentUser={currentUser}
               selected={selected.has(r._id)}
@@ -632,6 +634,7 @@ export default function Outstanding({ company, currentUser, onCountChange }) {
           onClose={() => setEditTarget(null)}
         />
       )}
+
     </div>
   );
 }
