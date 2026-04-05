@@ -6,11 +6,14 @@ import Invoice from '../models/Invoice.js'
 import { asyncHandler } from '../utils/errors.js'
 
 // --- helpers ---
-function nextInvoiceNumber() {
-  // Simple: UPL-YYYYMM-<random4>. Replace with a sequence if needed.
-  const yymm = new Date().toISOString().slice(0, 7).replace('-', '')
-  const rnd = Math.floor(1000 + Math.random() * 9000)
-  return `UPL-${yymm}-${rnd}`
+async function nextInvoiceNumber(companyId) {
+  const latest = await Invoice.findOne({ companyId })
+    .sort({ createdAt: -1 })
+    .select('invoiceNumber')
+    .lean()
+  const last = latest?.invoiceNumber
+  const n = last ? parseInt(last, 10) : null
+  return Number.isFinite(n) ? String(n + 1) : last ? last : '1001'
 }
 
 function computeDueDate(invoiceDate, terms) {
@@ -67,25 +70,31 @@ export const create = asyncHandler(async (req, res) => {
       .status(400)
       .json({ error: 'description and amountCents required' })
 
-  const invNum = invoiceNumber || nextInvoiceNumber()
+  const invNum = invoiceNumber?.trim() || (await nextInvoiceNumber(companyId))
   const dueDate = computeDueDate(invDate, client.paymentTermsDays)
 
-  const row = await Invoice.create({
-    companyId,
-    clientId,
-    routeId: routeId || undefined,
-    invoiceNumber: invNum,
-    loadRef,
-    description: desc,
-    amountCents: amt,
-    lineItems: Array.isArray(lineItems) && lineItems.length ? lineItems : undefined,
-    invoiceDate: invDate,
-    dueDate,
-    status,
-    createdBy: uid,
-  })
-
-  res.json(row)
+  try {
+    const row = await Invoice.create({
+      companyId,
+      clientId,
+      routeId: routeId || undefined,
+      invoiceNumber: invNum,
+      loadRef,
+      description: desc,
+      amountCents: amt,
+      lineItems: Array.isArray(lineItems) && lineItems.length ? lineItems : undefined,
+      invoiceDate: invDate,
+      dueDate,
+      status,
+      createdBy: uid,
+    })
+    res.json(row)
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({ error: `Invoice number "${invNum}" already exists` })
+    }
+    throw err
+  }
 })
 
 // GET /api/invoices/outstanding
