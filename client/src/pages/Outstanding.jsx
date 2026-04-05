@@ -158,12 +158,15 @@ export default function Outstanding() {
   async function exportYtd() {
     const all = await api.search("");
     const yr = new Date().getFullYear();
-    const ytd = all.filter((r) => r.invoiceDate && new Date(r.invoiceDate).getFullYear() === yr);
+    const yearStart = new Date(yr, 0, 1);
+    const ytd = all.filter((r) =>
+      r.status === "paid" && r.paidDate && new Date(r.paidDate) >= yearStart
+    );
     const total = ytd.reduce((s, r) => s + (r.amountCents || 0), 0);
-    downloadCsv("ytd-invoices.csv",
-      ["Invoice #", "Client", "Issued", "Amount", "Status", "Paid Date"],
-      [...ytd.map((r) => [r.invoiceNumber, r.client?.name || "-", formatDate(r.invoiceDate), currency(r.amountCents), r.status, r.status === "paid" ? formatDate(r.paidDate) : "N/A"]),
-       ["TOTAL", "", "", currency(total), "", ""]]
+    downloadCsv(`ytd-paid-${yr}.csv`,
+      ["Invoice #", "Client", "Invoice Date", "Paid Date", "Amount"],
+      [...ytd.map((r) => [r.invoiceNumber, r.client?.name || "-", formatDate(r.invoiceDate), formatDate(r.paidDate), currency(r.amountCents)]),
+       ["TOTAL", "", "", "", currency(total)]]
     );
   }
 
