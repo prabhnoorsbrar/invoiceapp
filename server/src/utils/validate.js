@@ -54,8 +54,23 @@ export const schemas = {
   createClient: z.object({
     name: z.string().min(1, "Name required").max(200),
     emailTo: z.array(z.string().email()).optional().default([]),
+    cc: z.array(z.string().email()).optional().default([]),
     address: z.string().max(500).optional(),
     paymentTermsDays: z.number().int().min(0).max(365).optional().default(30),
+  }),
+
+  updateClient: z.object({
+    name: z.string().min(1).max(200).optional(),
+    emailTo: z.array(z.string().email()).optional(),
+    cc: z.array(z.string().email()).optional(),
+    address: z.string().max(500).optional(),
+    paymentTermsDays: z.number().int().min(0).max(365).optional(),
+  }),
+
+  updateMe: z.object({
+    email: z.string().email().optional(),
+    currentPassword: z.string().min(1).optional(),
+    newPassword: z.string().min(8).optional(),
   }),
 
   createRoute: z.object({

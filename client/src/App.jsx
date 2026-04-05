@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { logout, getCurrentUser, getCurrentCompany } from "./api";
+import { logout, getCurrentUser, getCurrentCompany, setCurrentUser } from "./api";
 import CreateInvoice from "./pages/CreateInvoice";
 import Outstanding from "./pages/Outstanding";
 import Search from "./pages/Search";
 import Login from "./pages/Login";
+import Settings from "./pages/Settings";
 
 export default function App() {
   const [authed, setAuthed] = useState(() => !!getCurrentUser());
@@ -55,12 +56,24 @@ export default function App() {
           ))}
         </nav>
 
-        <button
-          onClick={() => { logout(); setAuthed(false); setUser(null); setCompany(null); }}
-          className="px-3 py-1.5 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors"
-        >
-          Logout
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setView("settings")}
+            title="Settings"
+            className={`p-2 rounded-lg border transition-colors ${view === "settings" ? "border-primary/50 text-primary bg-primary/10" : "border-white/10 text-base-content/40 hover:text-base-content hover:border-white/20 hover:bg-white/[0.06]"}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+          <button
+            onClick={() => { logout(); setAuthed(false); setUser(null); setCompany(null); }}
+            className="px-3 py-1.5 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors"
+          >
+            Logout
+          </button>
+        </div>
       </header>
 
       {/* Page content */}
@@ -68,6 +81,7 @@ export default function App() {
         {view === "create" && <CreateInvoice company={company} currentUser={user} prefill={prefill} onPrefillConsumed={() => setPrefill(null)} />}
         {view === "outstanding" && <Outstanding company={company} currentUser={user} />}
         {view === "search" && <Search onDuplicate={(r) => { setPrefill(r); setView("create"); }} company={company} currentUser={user} />}
+        {view === "settings" && <Settings currentUser={user} onUserUpdate={(u) => { setUser(u); setCurrentUser(u); }} />}
       </main>
 
       {/* Mobile bottom nav */}
