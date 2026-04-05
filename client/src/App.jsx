@@ -98,7 +98,7 @@ export default function App() {
               >
                 {isCreate ? (
                   <div className="flex flex-col items-center gap-1">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition-all duration-200 shadow-lg ${
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl transition-all duration-200 shadow-lg ${
                       isActive
                         ? "bg-primary shadow-[0_0_18px_rgba(59,130,246,0.6)] scale-110"
                         : "bg-primary/80 shadow-[0_0_12px_rgba(59,130,246,0.35)] hover:scale-105"
