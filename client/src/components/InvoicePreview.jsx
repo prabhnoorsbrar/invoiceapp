@@ -383,7 +383,12 @@ export default function InvoicePreview({ company, user, client, invoice }) {
     addFooter();
 
     const filename = invoiceNumber ? `Invoice ${invoiceNumber}.pdf` : "Invoice Preview.pdf";
-    pdf.save(filename);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      pdf.output("dataurlnewwindow");
+    } else {
+      pdf.save(filename);
+    }
   }, [
     businessName,
     cityStateZip,
