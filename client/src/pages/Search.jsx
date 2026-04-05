@@ -10,7 +10,7 @@ function formatDate(value, fallback = "-") {
   return `${m}/${d}/${y}`;
 }
 
-function InvoiceCard({ r, onReopen, onDelete }) {
+function InvoiceCard({ r, onReopen, onDelete, onDuplicate }) {
   const isPaid = r.status === "paid";
   return (
     <div className="bg-base-100 rounded-2xl border border-base-300 overflow-hidden flex flex-col hover:border-base-content/20 transition-all hover:shadow-lg">
@@ -66,7 +66,7 @@ function InvoiceCard({ r, onReopen, onDelete }) {
         )}
       </div>
 
-      <div className={`grid border-t border-base-300 divide-x divide-base-300 ${isPaid ? "grid-cols-2" : "grid-cols-1"}`}>
+      <div className={`grid border-t border-base-300 divide-x divide-base-300 ${isPaid ? "grid-cols-3" : "grid-cols-2"}`}>
         {isPaid && (
           <button
             onClick={() => onReopen(r)}
@@ -75,6 +75,12 @@ function InvoiceCard({ r, onReopen, onDelete }) {
             Unmark Paid
           </button>
         )}
+        <button
+          onClick={() => onDuplicate(r)}
+          className="py-3 text-sm font-bold text-primary bg-primary/15 hover:bg-primary/25 transition-colors"
+        >
+          Duplicate
+        </button>
         <button
           onClick={() => onDelete(r)}
           className="py-3 text-sm font-bold text-error bg-error/15 hover:bg-error/25 transition-colors"
@@ -86,10 +92,11 @@ function InvoiceCard({ r, onReopen, onDelete }) {
   );
 }
 
-export default function Search() {
+export default function Search({ onDuplicate }) {
   const [q, setQ] = useState("");
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [reopenTarget, setReopenTarget] = useState(null);
@@ -101,6 +108,7 @@ export default function Search() {
     try {
       const data = await api.search(q);
       setRows(data);
+      setSearched(true);
     } catch (err) {
       console.error(err);
     } finally {
@@ -146,6 +154,12 @@ export default function Search() {
         </div>
       </form>
 
+      {searched && !loading && rows.length === 0 && (
+        <div className="bg-base-100 rounded-2xl border border-base-300 p-16 text-center">
+          <p className="text-base-content/30 text-sm">No invoices found for &ldquo;{q}&rdquo;</p>
+        </div>
+      )}
+
       {rows.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {rows.map((r) => (
@@ -154,6 +168,7 @@ export default function Search() {
               r={r}
               onReopen={setReopenTarget}
               onDelete={setDeleteTarget}
+              onDuplicate={onDuplicate}
             />
           ))}
         </div>

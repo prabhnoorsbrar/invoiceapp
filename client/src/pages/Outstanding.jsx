@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { api } from "../api";
 
 function currency(cents) {
@@ -20,11 +20,24 @@ function KPI({ label, value, sub }) {
   );
 }
 
+function daysOverdue(dueDate) {
+  if (!dueDate) return null;
+  const [y, m, d] = dueDate.slice(0, 10).split("-").map(Number);
+  const due = new Date(y, m - 1, d);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.floor((today - due) / (1000 * 60 * 60 * 24));
+}
+
 function InvoiceCard({ r, onMarkPaid, onDelete }) {
+  const overdue = daysOverdue(r.dueDate);
+  const isOverdue = overdue !== null && overdue > 0;
+  const isDueToday = overdue === 0;
+
   return (
-    <div className="bg-base-100 rounded-2xl border border-base-300 overflow-hidden flex flex-col hover:border-base-content/20 transition-all hover:shadow-lg">
+    <div className={`bg-base-100 rounded-2xl border overflow-hidden flex flex-col transition-all hover:shadow-lg ${isOverdue ? "border-error/60 hover:border-error/80" : "border-base-300 hover:border-base-content/20"}`}>
       {/* Accent bar */}
-      <div className="h-1 w-full bg-error/70" />
+      <div className={`w-full ${isOverdue ? "h-1.5 bg-error" : "h-1 bg-error/70"}`} />
 
       <div className="p-5 flex flex-col gap-4 flex-1">
         {/* Top row */}
@@ -61,6 +74,21 @@ function InvoiceCard({ r, onMarkPaid, onDelete }) {
             <p className="text-base-content/60 font-medium mt-0.5">{formatDate(r.dueDate)}</p>
           </div>
         </div>
+
+        {/* Overdue indicator */}
+        {isOverdue && (
+          <div className="flex items-center gap-1.5 bg-error/10 border border-error/30 rounded-lg px-3 py-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-error shrink-0" />
+            <p className="text-xs font-bold text-error">{overdue} day{overdue !== 1 ? "s" : ""} overdue</p>
+          </div>
+        )}
+        {isDueToday && (
+          <div className="flex items-center gap-1.5 bg-warning/10 border border-warning/30 rounded-lg px-3 py-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-warning shrink-0" />
+            <p className="text-xs font-bold text-warning">Due today</p>
+          </div>
+        )}
+
         {r.loadRef && (
           <p className="text-xs text-base-content/30">
             <span className="uppercase tracking-wider text-[10px] font-bold">Ref</span>{" "}
@@ -98,6 +126,8 @@ export default function Outstanding() {
   const [markingPaid, setMarkingPaid] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [clientFilter, setClientFilter] = useState("");
+  const [sortBy, setSortBy] = useState("oldest_due");
   const intervalRef = useRef(null);
 
   useEffect(() => {
@@ -148,6 +178,23 @@ export default function Outstanding() {
     URL.revokeObjectURL(a.href);
   }
 
+  const displayRows = useMemo(() => {
+    let filtered = rows;
+    if (clientFilter.trim()) {
+      const f = clientFilter.toLowerCase();
+      filtered = rows.filter((r) => r.client?.name?.toLowerCase().includes(f));
+    }
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "oldest_due": return (a.dueDate || "") < (b.dueDate || "") ? -1 : 1;
+        case "newest_due": return (a.dueDate || "") > (b.dueDate || "") ? -1 : 1;
+        case "amount_desc": return (b.amountCents || 0) - (a.amountCents || 0);
+        case "client_az": return (a.client?.name || "").localeCompare(b.client?.name || "");
+        default: return 0;
+      }
+    });
+  }, [rows, clientFilter, sortBy]);
+
   function exportOutstanding() {
     downloadCsv("outstanding-invoices.csv",
       ["Invoice #", "Client", "Issued", "Due", "Amount"],
@@ -178,22 +225,42 @@ export default function Outstanding() {
         <KPI label="YTD Collected" value={currency(kpi.ytdIncomeCents)} />
       </div>
 
-      <div className="flex gap-2">
-        <button onClick={exportOutstanding} className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">Export Outstanding</button>
-        <button onClick={exportYtd} className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">Export YTD</button>
+      <div className="flex flex-wrap gap-2 items-center justify-between">
+        <div className="flex gap-2">
+          <button onClick={exportOutstanding} className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">Export Outstanding</button>
+          <button onClick={exportYtd} className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity">Export YTD</button>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <input
+            className="input bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none text-sm w-44"
+            placeholder="Filter by client…"
+            value={clientFilter}
+            onChange={(e) => setClientFilter(e.target.value)}
+          />
+          <select
+            className="select bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none text-sm"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="oldest_due">Oldest Due First</option>
+            <option value="newest_due">Newest Due First</option>
+            <option value="amount_desc">Highest Amount</option>
+            <option value="client_az">Client A–Z</option>
+          </select>
+        </div>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-20">
           <span className="loading loading-spinner loading-lg text-primary" />
         </div>
-      ) : rows.length === 0 ? (
+      ) : displayRows.length === 0 ? (
         <div className="bg-base-100 rounded-2xl border border-base-300 p-16 text-center">
-          <p className="text-base-content/30 text-sm">No outstanding invoices</p>
+          <p className="text-base-content/30 text-sm">{rows.length === 0 ? "No outstanding invoices" : "No invoices match your filter"}</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {rows.map((r) => (
+          {displayRows.map((r) => (
             <InvoiceCard
               key={r._id}
               r={r}
