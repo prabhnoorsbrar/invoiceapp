@@ -12,11 +12,25 @@ export default function App() {
   const [user, setUser] = useState(() => getCurrentUser());
   const [company, setCompany] = useState(() => getCurrentCompany());
   const [prefill, setPrefill] = useState(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  React.useEffect(() => {
+    function handleExpired() {
+      setAuthed(false);
+      setUser(null);
+      setCompany(null);
+      setSessionExpired(true);
+    }
+    window.addEventListener("auth:expired", handleExpired);
+    return () => window.removeEventListener("auth:expired", handleExpired);
+  }, []);
 
   if (!authed) {
     return (
       <Login
+        sessionExpired={sessionExpired}
         onSuccess={(nextUser, nextCompany) => {
+          setSessionExpired(false);
           setAuthed(true);
           setUser(nextUser || null);
           setCompany(nextCompany || null);

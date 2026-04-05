@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { api, setCurrentUser, setCurrentCompany } from "../api";
 
-export default function Login({ onSuccess }) {
+export default function Login({ onSuccess, sessionExpired }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -38,6 +38,12 @@ export default function Login({ onSuccess }) {
           </h1>
           <p className="text-xs text-base-content/30 uppercase tracking-widest font-semibold">Invoice Portal</p>
         </div>
+
+        {sessionExpired && (
+          <div className="bg-warning/10 border border-warning/30 rounded-xl px-4 py-3 text-center">
+            <p className="text-warning text-sm font-semibold">Your session expired. Please log in again.</p>
+          </div>
+        )}
 
         {/* Card */}
         <form

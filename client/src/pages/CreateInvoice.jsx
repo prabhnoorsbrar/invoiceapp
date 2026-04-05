@@ -96,7 +96,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
   const [selectedClient, setSelectedClient] = useState(null);
   const [selectedRoute, setSelectedRoute] = useState(null);
 
-  const [invoiceNumber, setInvoiceNumber] = useState("…");
+  const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceDate, setInvoiceDate] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -129,7 +129,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
       setClients(list);
       const last = lastData?.invoiceNumber;
       const lastNum = last ? parseInt(last, 10) : null;
-      setInvoiceNumber(Number.isFinite(lastNum) ? String(lastNum + 1) : last ? last : "1001");
+      setInvoiceNumber(Number.isFinite(lastNum) ? String(lastNum + 1) : last || "1001");
       // If duplicating, auto-select the client (triggers routes useEffect)
       const pf = prefillRef.current;
       if (pf) {
@@ -290,7 +290,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
     const payload = {
       clientId: selectedClient._id,
       routeId: selectedRoute?._id,
-      invoiceNumber,
+      invoiceNumber: invoiceNumber.trim() || undefined,
       invoiceDate,
       loadRef,
       description: primaryDescription,
@@ -300,9 +300,8 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
     try {
       const created = await api.createInvoice(payload);
       if (created?._id) {
-        showToast(`Invoice ${invoiceNumber} created successfully.`, "success");
-        const n = parseInt(invoiceNumber, 10);
-        setInvoiceNumber(Number.isFinite(n) ? String(n + 1) : invoiceNumber);
+        showToast(`Invoice ${created.invoiceNumber} created successfully.`, "success");
+        setInvoiceNumber("");
         setSelectedClient(null);
         setSelectedRoute(null);
         setRoutes([]);
@@ -549,6 +548,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                   className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4"
                   value={invoiceNumber}
                   onChange={(e) => setInvoiceNumber(e.target.value)}
+                  placeholder="Auto"
                 />
               </div>
 

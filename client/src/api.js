@@ -76,6 +76,7 @@ async function request(path, { method = "GET", body, ...opts } = {}) {
     if (res.status === 401 && currentUser) {
       setCurrentUser(null);
       setCurrentCompany(null);
+      window.dispatchEvent(new CustomEvent("auth:expired"));
     }
     const msg = (data && (data.error || data.message)) || `HTTP ${res.status}`;
     throw new Error(msg);
