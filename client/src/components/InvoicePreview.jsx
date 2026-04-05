@@ -552,14 +552,11 @@ export default function InvoicePreview({ company, user, client, invoice }) {
         </p>
       </div>
 
-      <div className="mt-4 flex gap-2 text-sm">
-        <button
-          onClick={() => window.print()}
-          className="btn btn-outline btn-sm"
-        >
+      <div className="mt-4 flex gap-2">
+        <button onClick={() => window.print()} className="btn btn-outline btn-sm">
           Print
         </button>
-        <button onClick={handleDownloadPdf} className="btn btn-sm">
+        <button onClick={handleDownloadPdf} className="btn btn-outline btn-sm">
           Download PDF
         </button>
       </div>

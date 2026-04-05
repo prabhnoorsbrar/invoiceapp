@@ -117,6 +117,9 @@ export const api = {
   },
 
   // Invoices
+  lastInvoiceNumber() {
+    return request(`/api/invoices/last-number`);
+  },
   listOutstanding() {
     return request(`/api/invoices/outstanding`);
   },

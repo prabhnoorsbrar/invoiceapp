@@ -11,7 +11,6 @@ export default function App() {
   const [user, setUser] = useState(() => getCurrentUser());
   const [company, setCompany] = useState(() => getCurrentCompany());
 
-  // ❗ This prevents the full app from showing if user isn't logged in
   if (!authed) {
     return (
       <Login
@@ -25,42 +24,68 @@ export default function App() {
   }
 
   const navItems = [
-    { id: "create", label: "Create Invoice" },
-    { id: "outstanding", label: "Outstanding" },
-    { id: "search", label: "Search" },
+    { id: "outstanding", label: "Outstanding", icon: "📋" },
+    { id: "create", label: "Create", icon: "➕" },
+    { id: "search", label: "Search", icon: "🔍" },
   ];
 
   return (
-    <div className="min-h-screen bg-base-200">
-      <header className="bg-base-100 border-b shadow-sm px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="font-bold text-base hidden sm:block">US Pride Logistics</span>
-          <div className="tabs tabs-boxed bg-base-200">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setView(item.id)}
-                className={`tab ${view === item.id ? "tab-active" : ""}`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
+    <div className="min-h-screen bg-base-200 flex flex-col">
+      {/* Top header */}
+      <header className="bg-base-100 border-b border-base-300 px-4 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+        <span className="font-bold text-lg tracking-tight text-base-content">
+          US Pride Logistics
+        </span>
+
+        {/* Desktop nav */}
+        <nav className="hidden md:flex gap-1">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setView(item.id)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                view === item.id
+                  ? "bg-primary text-primary-content border-primary"
+                  : "border-base-300 text-base-content/70 hover:bg-base-200 hover:text-base-content hover:border-base-content/30"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
         <button
           onClick={() => { logout(); setAuthed(false); setUser(null); setCompany(null); }}
-          className="btn btn-ghost btn-sm"
+          className="btn btn-outline btn-sm"
         >
           Logout
         </button>
       </header>
-      <main className="p-4 max-w-7xl mx-auto">
 
-      
-      {view === "create" && <CreateInvoice company={company} currentUser={user} />}
-      {view === "outstanding" && <Outstanding />}
-      {view === "search" && <Search />}
+      {/* Page content */}
+      <main className="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto pb-24 md:pb-6">
+        {view === "create" && <CreateInvoice company={company} currentUser={user} />}
+        {view === "outstanding" && <Outstanding />}
+        {view === "search" && <Search />}
       </main>
+
+      {/* Mobile bottom nav */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-base-100 border-t border-base-300 flex z-40">
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setView(item.id)}
+            className={`flex-1 flex flex-col items-center py-3 gap-1 text-xs font-medium transition-colors ${
+              view === item.id
+                ? "text-primary"
+                : "text-base-content/50"
+            }`}
+          >
+            <span className="text-lg leading-none">{item.icon}</span>
+            {item.label}
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }
