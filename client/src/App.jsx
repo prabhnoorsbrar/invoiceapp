@@ -71,21 +71,27 @@ export default function App() {
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-base-100 border-t border-base-300 flex z-40">
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setView(item.id)}
-            className={`flex-1 flex flex-col items-center py-3 gap-1 text-xs font-medium transition-colors ${
-              view === item.id
-                ? "text-primary"
-                : "text-base-content/50"
-            }`}
-          >
-            <span className="text-lg leading-none">{item.icon}</span>
-            {item.label}
-          </button>
-        ))}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-white/[0.08]" style={{ background: "rgba(5,6,10,0.80)", backdropFilter: "blur(20px)" }}>
+        <div className="flex items-center justify-around h-16 px-2">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setView(item.id)}
+              className="flex-1 flex flex-col items-center justify-center"
+            >
+              <div className={`flex flex-col items-center gap-1 px-5 py-1.5 rounded-2xl transition-all duration-200 ${
+                view === item.id ? "bg-primary/20 border border-primary/30" : ""
+              }`}>
+                <span className={`text-lg leading-none transition-colors duration-200 ${view === item.id ? "text-primary" : "text-base-content/30"}`}>
+                  {item.icon}
+                </span>
+                <span className={`text-[10px] font-bold uppercase tracking-wider transition-colors duration-200 ${view === item.id ? "text-primary" : "text-base-content/25"}`}>
+                  {item.label}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
       </nav>
     </div>
   );
