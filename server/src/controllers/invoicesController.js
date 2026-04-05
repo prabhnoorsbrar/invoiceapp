@@ -110,9 +110,19 @@ export const search = asyncHandler(async (req, res) => {
   const { companyId } = req.user
   const { q = '' } = req.query
   const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+
+  // Find clients whose name matches so we can include them in the invoice query
+  const matchingClients = await Client.find({ companyId, name: re }).select('_id').lean()
+  const clientIds = matchingClients.map((c) => c._id)
+
   const rows = await Invoice.find({
     companyId,
-    $or: [{ invoiceNumber: re }, { loadRef: re }, { description: re }],
+    $or: [
+      { invoiceNumber: re },
+      { loadRef: re },
+      { description: re },
+      ...(clientIds.length ? [{ clientId: { $in: clientIds } }] : []),
+    ],
   })
     .sort({ invoiceDate: -1 })
     .limit(200)

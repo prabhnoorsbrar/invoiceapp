@@ -96,6 +96,7 @@ export default function Search({ onDuplicate }) {
   const [q, setQ] = useState("");
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [reopenTarget, setReopenTarget] = useState(null);
@@ -107,6 +108,7 @@ export default function Search({ onDuplicate }) {
     try {
       const data = await api.search(q);
       setRows(data);
+      setSearched(true);
     } catch (err) {
       console.error(err);
     } finally {
@@ -151,6 +153,12 @@ export default function Search({ onDuplicate }) {
           </button>
         </div>
       </form>
+
+      {searched && !loading && rows.length === 0 && (
+        <div className="bg-base-100 rounded-2xl border border-base-300 p-16 text-center">
+          <p className="text-base-content/30 text-sm">No invoices found for &ldquo;{q}&rdquo;</p>
+        </div>
+      )}
 
       {rows.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
