@@ -33,8 +33,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-base-200 flex flex-col">
       {/* Top header */}
-      <header className="bg-base-100 border-b border-base-300 px-4 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-        <span className="font-bold text-lg tracking-tight text-base-content">
+      <header className="sticky top-0 z-40 px-4 py-3 flex items-center justify-between shadow-lg border-b border-white/[0.08]" style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.18) 0%, rgba(109,40,217,0.14) 50%, rgba(15,23,42,0.85) 100%)", backdropFilter: "blur(20px)" }}>
+        <span className="font-black text-xl tracking-tight text-base-content">
           US Pride Logistics
         </span>
 

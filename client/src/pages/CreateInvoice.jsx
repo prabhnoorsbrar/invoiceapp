@@ -17,6 +17,23 @@ const defaultRouteFormState = {
   amount: "",
 };
 
+function OverrideToggle({ checked, onChange }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border transition-all duration-200 ${
+        checked
+          ? "bg-amber-500/15 text-amber-400 border-amber-500/30 shadow-[0_0_8px_rgba(245,158,11,0.15)]"
+          : "bg-white/[0.05] text-base-content/40 border-white/10 hover:border-white/20"
+      }`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full transition-colors ${checked ? "bg-amber-400" : "bg-base-content/30"}`} />
+      {checked ? "Manual" : "Auto"}
+    </button>
+  );
+}
+
 function parseAmountToCents(value) {
   if (typeof value === "number") {
     return Number.isFinite(value) ? Math.round(value * 100) : null;
@@ -462,7 +479,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                   <button
                     key={client._id}
                     onClick={() => handleClientSelect(client)}
-                    className="p-4 bg-base-100 border border-base-300 rounded-xl text-left hover:border-primary/50 hover:shadow-lg transition-all"
+                    className="p-4 bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] rounded-xl text-left hover:bg-white/[0.08] hover:border-white/[0.15] hover:shadow-xl transition-all"
                   >
                     <div className="font-semibold text-base-content">{client.name}</div>
                     <div className="text-sm text-base-content/50 whitespace-pre-line mt-1">
@@ -485,7 +502,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
               </div>
               <div className="space-y-3">
                 {routes.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-base-300 p-6 text-center text-sm text-base-content/40">
+                  <div className="rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-base-content/40">
                     {selectedClient
                       ? `No routes found for ${selectedClient.name}. Add a new route to continue.`
                       : "Select a bill-to to manage routes."}
@@ -502,7 +519,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                     <button
                       key={route._id}
                       onClick={() => handleRouteSelect(route)}
-                      className="w-full text-left bg-base-100 border border-base-300 p-4 rounded-xl hover:border-primary/50 hover:shadow-lg transition-all"
+                      className="w-full text-left bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] p-4 rounded-xl hover:bg-white/[0.08] hover:border-white/[0.15] hover:shadow-xl transition-all"
                     >
                       <div className="text-sm font-semibold text-base-content mb-1">
                         {route.descriptionTemplate || route.name}
@@ -529,7 +546,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
               <div className="form-control">
                 <label className="label"><span className="label-text">Invoice #</span></label>
                 <input
-                  className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                  className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
                   value={invoiceNumber}
                   onChange={(e) => setInvoiceNumber(e.target.value)}
                 />
@@ -539,7 +556,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                 <label className="label"><span className="label-text">Invoice Date</span></label>
                 <input
                   type="date"
-                  className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                  className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
                   value={invoiceDate}
                   onChange={(e) => setInvoiceDate(e.target.value)}
                 />
@@ -548,7 +565,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
               <div className="form-control">
                 <label className="label"><span className="label-text">Load / Ref #</span></label>
                 <input
-                  className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                  className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
                   value={loadRef}
                   onChange={(e) => setLoadRef(e.target.value)}
                 />
@@ -557,26 +574,16 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
               <div className="form-control">
                 <label className="label justify-between">
                   <span>Main Description</span>
-                  <label className="label cursor-pointer p-0 gap-2">
-                    <span className="text-xs text-base-content/60">Manual</span>
-                    <input
-                      type="checkbox"
-                      className="toggle toggle-sm"
-                      checked={overrideDescription}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setOverrideDescription(checked);
-                        if (!checked) {
-                          updateLineItem(PRIMARY_LINE_ID, {
-                            description: routeDescription || "",
-                          });
-                        }
-                      }}
-                    />
-                  </label>
+                  <OverrideToggle
+                    checked={overrideDescription}
+                    onChange={(checked) => {
+                      setOverrideDescription(checked);
+                      if (!checked) updateLineItem(PRIMARY_LINE_ID, { description: routeDescription || "" });
+                    }}
+                  />
                 </label>
                 <textarea
-                  className="textarea w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                  className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
                   placeholder="Describe the load…"
                   value={primaryItem.description || ""}
                   onChange={(e) =>
@@ -592,34 +599,22 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
               <div className="form-control">
                 <label className="label justify-between">
                   <span>Main Amount (USD)</span>
-                  <label className="label cursor-pointer p-0 gap-2">
-                    <span className="text-xs text-base-content/60">Manual</span>
-                    <input
-                      type="checkbox"
-                      className="toggle toggle-sm"
-                      checked={overridePrice}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setOverridePrice(checked);
-                        if (!checked) {
-                          updateLineItem(PRIMARY_LINE_ID, {
-                            amountCents: routeAmountCents,
-                            amountInput:
-                              typeof routeAmountCents === "number" &&
-                              Number.isFinite(routeAmountCents)
-                                ? centsToInputValue(routeAmountCents)
-                                : "",
-                          });
-                        }
-                      }}
-                    />
-                  </label>
+                  <OverrideToggle
+                    checked={overridePrice}
+                    onChange={(checked) => {
+                      setOverridePrice(checked);
+                      if (!checked) updateLineItem(PRIMARY_LINE_ID, {
+                        amountCents: routeAmountCents,
+                        amountInput: typeof routeAmountCents === "number" && Number.isFinite(routeAmountCents) ? centsToInputValue(routeAmountCents) : "",
+                      });
+                    }}
+                  />
                 </label>
                 <input
                   type="number"
                   inputMode="decimal"
                   step="0.01"
-                  className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                  className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
                   placeholder="1200.00"
                   value={
                     typeof primaryItem.amountInput === "string"
@@ -663,7 +658,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                           </span>
                         </label>
                         <textarea
-                          className="textarea w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                          className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
                           placeholder="DETENTION RATE"
                           rows={2}
                           value={item.description || ""}
@@ -684,7 +679,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                           type="number"
                           inputMode="decimal"
                           step="0.01"
-                          className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                          className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
                           placeholder="50.00"
                           value={
                             typeof item.amountInput === "string"
@@ -759,10 +754,10 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
 
             
       {showClientModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="max-h-full w-full max-w-lg overflow-y-auto">
-            <div className="bg-base-100 border border-base-300 rounded-2xl shadow-2xl">
-              <div className="flex items-center justify-between p-6 border-b border-base-300">
+            <div className="bg-base-100/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
+              <div className="flex items-center justify-between p-6 border-b border-white/10">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-base-content/40 mb-1">Billing Details</p>
                   <h2 className="text-xl font-bold text-base-content">Add Bill-To</h2>
@@ -773,7 +768,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                 <div className="form-control">
                   <label className="label pb-1"><span className="label-text font-semibold">Client name</span></label>
                   <input
-                    className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                    className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
                     value={clientForm.name}
                     onChange={(e) => handleClientFormChange("name", e.target.value)}
                     required
@@ -795,7 +790,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                 <div className="form-control">
                   <label className="label pb-1"><span className="label-text font-semibold">Billing address</span></label>
                   <textarea
-                    className="textarea w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                    className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
                     rows={3}
                     value={clientForm.address}
                     onChange={(e) => handleClientFormChange("address", e.target.value)}
@@ -807,14 +802,14 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                     <span className="label-text-alt text-base-content/40">Comma separated</span>
                   </label>
                   <textarea
-                    className="textarea w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                    className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
                     rows={2}
                     value={clientForm.emailTo}
                     onChange={(e) => handleClientFormChange("emailTo", e.target.value)}
                   />
                 </div>
                 <p className="text-xs text-base-content/40">After saving you'll be prompted to add or pick a route.</p>
-                <div className="flex gap-3 justify-end pt-2 border-t border-base-300">
+                <div className="flex gap-3 justify-end pt-2 border-t border-white/10">
                   <button type="button" className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={closeClientModal} disabled={savingClient}>Cancel</button>
                   <button type="submit" className="px-6 py-2 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50" disabled={savingClient}>
                     {savingClient ? <span className="loading loading-spinner loading-sm" /> : "Save Bill-To"}
@@ -826,10 +821,10 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
         </div>
       )}
       {showRouteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="max-h-full w-full max-w-lg overflow-y-auto">
-            <div className="bg-base-100 border border-base-300 rounded-2xl shadow-2xl">
-              <div className="flex items-center justify-between p-6 border-b border-base-300">
+            <div className="bg-base-100/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
+              <div className="flex items-center justify-between p-6 border-b border-white/10">
                 <h2 className="text-xl font-bold text-base-content">Add Route</h2>
                 <button className="btn btn-sm btn-ghost" onClick={closeRouteModal}>✕</button>
               </div>
@@ -838,7 +833,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                   <div className="form-control">
                     <label className="label pb-1"><span className="label-text font-semibold">Route name</span></label>
                     <input
-                      className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                      className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
                       placeholder="Chicago → Dallas"
                       value={routeForm.name}
                       onChange={(e) => handleRouteFormChange("name", e.target.value)}
@@ -847,7 +842,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                   <div className="form-control">
                     <label className="label pb-1"><span className="label-text font-semibold">Amount (USD)</span></label>
                     <input
-                      className="input w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                      className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
                       type="number"
                       inputMode="decimal"
                       step="0.01"
@@ -861,14 +856,14 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                 <div className="form-control">
                   <label className="label pb-1"><span className="label-text font-semibold">Description</span></label>
                   <textarea
-                    className="textarea w-full bg-base-200 border border-base-content/20 focus:border-primary focus:outline-none"
+                    className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors"
                     rows={3}
                     placeholder="Linehaul from Chicago to Dallas"
                     value={routeForm.description}
                     onChange={(e) => handleRouteFormChange("description", e.target.value)}
                   />
                 </div>
-                <div className="flex justify-end gap-3 pt-2 border-t border-base-300">
+                <div className="flex justify-end gap-3 pt-2 border-t border-white/10">
                   <button type="button" className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={closeRouteModal} disabled={savingRoute}>Cancel</button>
                   <button type="submit" className="px-6 py-2 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50" disabled={savingRoute}>
                     {savingRoute ? <span className="loading loading-spinner loading-sm" /> : "Save Route"}

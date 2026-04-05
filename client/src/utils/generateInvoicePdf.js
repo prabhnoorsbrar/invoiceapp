@@ -175,19 +175,34 @@ export function generateInvoicePdf({ invoice, client, company, user }) {
   pdf.setDrawColor(230, 230, 230);
 
   let rowY = headerY + 8;
+  let visibleRowIndex = 0;
   lineItems.forEach((item) => {
     const amount = typeof item.amountCents === "number" && Number.isFinite(item.amountCents) ? item.amountCents : 0;
     const desc = item.description || (item.isPrimary ? "Freight charges" : "");
     if (!desc && !amount) return;
-    const wrappedDesc = pdf.splitTextToSize(desc, descWidth - 2);
-    const height = Math.max(8, wrappedDesc.length * 5);
-    pdf.text(wrappedDesc, marginLeft, rowY);
+    const wrappedDesc = pdf.splitTextToSize(desc, descWidth - 4);
+    const rowHeight = Math.max(10, wrappedDesc.length * 5 + 6);
+
+    // Alternating row background
+    if (visibleRowIndex % 2 === 1) {
+      pdf.setFillColor(242, 246, 253);
+      pdf.rect(marginLeft, rowY - 6, usableWidth, rowHeight, "F");
+    }
+
+    pdf.setFontSize(9);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(30, 30, 30);
+    pdf.text(wrappedDesc, marginLeft + 3, rowY);
     pdf.text("1", marginLeft + descWidth + 4, rowY, { align: "right" });
     pdf.text(currency(amount), marginLeft + descWidth + qtyWidth + 8, rowY, { align: "right" });
     pdf.text(currency(amount), marginLeft + descWidth + qtyWidth + unitWidth + 12, rowY, { align: "right" });
-    rowY += height + 4;
-    pdf.setDrawColor(240, 240, 240);
+
+    rowY += rowHeight;
+    pdf.setDrawColor(200, 215, 235);
+    pdf.setLineWidth(0.3);
     pdf.line(marginLeft, rowY - 2, marginLeft + usableWidth, rowY - 2);
+    pdf.setLineWidth(0.2);
+    visibleRowIndex++;
   });
 
   pdf.setFont("helvetica", "bold");

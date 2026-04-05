@@ -13,7 +13,7 @@ function formatDate(value, fallback = "-") {
 
 function KPI({ label, value, sub }) {
   return (
-    <div className="bg-base-100 rounded-2xl p-6 border border-base-300 flex flex-col gap-2">
+    <div className="bg-white/[0.06] backdrop-blur-sm rounded-2xl p-6 border border-white/[0.12] shadow-xl flex flex-col gap-2">
       <p className="text-xs font-bold uppercase tracking-widest text-base-content/40">{label}</p>
       <p className="text-3xl font-extrabold text-base-content">{value}</p>
       {sub && <p className="text-xs text-base-content/30">{sub}</p>}
@@ -36,9 +36,15 @@ function InvoiceCard({ r, onMarkPaid, onDelete, company, currentUser }) {
   const isDueToday = overdue === 0;
 
   return (
-    <div className={`bg-base-100 rounded-2xl border overflow-hidden flex flex-col transition-all hover:shadow-lg ${isOverdue ? "border-error/60 hover:border-error/80" : "border-base-300 hover:border-base-content/20"}`}>
+    <div className={`backdrop-blur-sm rounded-2xl border overflow-hidden flex flex-col transition-all ${
+      isOverdue
+        ? "bg-red-500/[0.08] border-red-500/30 hover:bg-red-500/[0.13] hover:border-red-500/50 shadow-[0_0_24px_rgba(239,68,68,0.10)] hover:shadow-[0_0_32px_rgba(239,68,68,0.18)]"
+        : isDueToday
+        ? "bg-amber-500/[0.08] border-amber-500/25 hover:bg-amber-500/[0.13] hover:border-amber-500/45 shadow-[0_0_24px_rgba(245,158,11,0.08)] hover:shadow-[0_0_32px_rgba(245,158,11,0.15)]"
+        : "bg-white/[0.07] border-white/[0.12] hover:bg-white/[0.11] hover:border-white/[0.20] hover:shadow-2xl"
+    }`}>
       {/* Accent bar */}
-      <div className={`w-full ${isOverdue ? "h-1.5 bg-error" : "h-1 bg-error/70"}`} />
+      <div className={`w-full h-[3px] ${isOverdue ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" : isDueToday ? "bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.7)]" : "bg-primary/50"}`} />
 
       <div className="p-5 flex flex-col gap-4 flex-1">
         {/* Top row */}
@@ -48,13 +54,15 @@ function InvoiceCard({ r, onMarkPaid, onDelete, company, currentUser }) {
             <p className="text-xl font-extrabold text-base-content leading-none">#{r.invoiceNumber}</p>
           </div>
           <div className="text-right shrink-0 flex flex-col items-end gap-1">
-            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-error/20 text-error border border-error/30">Outstanding</span>
+            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+              isOverdue ? "bg-red-500/20 text-red-400 border-red-500/30" : isDueToday ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-white/[0.06] text-base-content/50 border-white/10"
+            }`}>Outstanding</span>
             <p className="text-xl font-extrabold text-primary leading-none">{currency(r.amountCents)}</p>
           </div>
         </div>
 
         {/* Client */}
-        <div className="bg-base-200 rounded-xl px-3 py-2">
+        <div className="bg-white/[0.06] rounded-xl px-3 py-2">
           <p className="text-xs text-base-content/40 mb-0.5">Client</p>
           <p className="text-sm font-semibold text-base-content truncate">{r.client?.name || "-"}</p>
         </div>
@@ -65,7 +73,7 @@ function InvoiceCard({ r, onMarkPaid, onDelete, company, currentUser }) {
         </p>
 
         {/* Dates */}
-        <div className="flex justify-between text-xs text-base-content/40 border-t border-base-300 pt-3">
+        <div className="flex justify-between text-xs text-base-content/40 border-t border-white/[0.08] pt-3">
           <div>
             <p className="font-semibold text-base-content/30 uppercase tracking-wider text-[10px]">Issued</p>
             <p className="text-base-content/60 font-medium mt-0.5">{formatDate(r.invoiceDate)}</p>
@@ -99,23 +107,23 @@ function InvoiceCard({ r, onMarkPaid, onDelete, company, currentUser }) {
       </div>
 
       {/* Buttons */}
-      <div className="grid grid-cols-3 border-t border-base-300 divide-x divide-base-300">
+      <div className={`flex gap-2 px-3 pb-3 pt-2 border-t ${isOverdue ? "border-red-500/20" : isDueToday ? "border-amber-500/20" : "border-white/[0.08]"}`}>
         <button
           onClick={() => generateInvoicePdf({ invoice: { ...r, lineItems: r.lineItems }, client: r.client, company, user: currentUser })}
-          className="py-3 text-sm font-bold text-primary bg-primary/15 hover:bg-primary/25 transition-colors"
+          className="flex-1 py-2 rounded-lg text-xs font-bold text-primary bg-primary/10 border border-primary/30 hover:bg-primary/25 hover:border-primary/50 active:bg-primary/35 transition-all duration-150"
           title="Download PDF"
         >
           ↓ PDF
         </button>
         <button
           onClick={() => onMarkPaid(r)}
-          className="py-3 text-sm font-bold text-success bg-success/15 hover:bg-success/25 transition-colors"
+          className="flex-1 py-2 rounded-lg text-xs font-bold text-success bg-success/10 border border-success/30 hover:bg-success/25 hover:border-success/50 active:bg-success/35 transition-all duration-150"
         >
           Mark Paid
         </button>
         <button
           onClick={() => onDelete(r)}
-          className="py-3 text-sm font-bold text-error bg-error/15 hover:bg-error/25 transition-colors"
+          className="flex-1 py-2 rounded-lg text-xs font-bold text-error bg-error/10 border border-error/30 hover:bg-error/25 hover:border-error/50 active:bg-error/35 transition-all duration-150"
         >
           Delete
         </button>
@@ -263,7 +271,7 @@ export default function Outstanding({ company, currentUser }) {
           <span className="loading loading-spinner loading-lg text-primary" />
         </div>
       ) : displayRows.length === 0 ? (
-        <div className="bg-base-100 rounded-2xl border border-base-300 p-16 text-center">
+        <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.08] p-16 text-center">
           <p className="text-base-content/30 text-sm">{rows.length === 0 ? "No outstanding invoices" : "No invoices match your filter"}</p>
         </div>
       ) : (
@@ -282,8 +290,8 @@ export default function Outstanding({ company, currentUser }) {
       )}
 
       {markPaidTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-base-100 rounded-2xl p-6 w-full max-w-sm border border-base-300 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-base-100/80 backdrop-blur-xl rounded-2xl p-6 w-full max-w-sm border border-white/10 shadow-2xl space-y-4">
             <div>
               <h3 className="text-lg font-bold text-base-content">Mark as Paid</h3>
               <p className="text-sm text-base-content/40 mt-1">#{markPaidTarget.invoiceNumber} · {markPaidTarget.client?.name} · {currency(markPaidTarget.amountCents)}</p>
@@ -309,8 +317,8 @@ export default function Outstanding({ company, currentUser }) {
       )}
 
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-base-100 rounded-2xl p-6 w-full max-w-sm border border-base-300 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-base-100/80 backdrop-blur-xl rounded-2xl p-6 w-full max-w-sm border border-white/10 shadow-2xl space-y-4">
             <h3 className="text-lg font-bold text-base-content">Delete Invoice?</h3>
             <p className="text-sm text-base-content/50">
               <strong>#{deleteTarget.invoiceNumber}</strong> · {deleteTarget.client?.name} · {currency(deleteTarget.amountCents)} will be permanently deleted.
