@@ -20,11 +20,24 @@ function KPI({ label, value, sub }) {
   );
 }
 
+function daysOverdue(dueDate) {
+  if (!dueDate) return null;
+  const [y, m, d] = dueDate.slice(0, 10).split("-").map(Number);
+  const due = new Date(y, m - 1, d);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.floor((today - due) / (1000 * 60 * 60 * 24));
+}
+
 function InvoiceCard({ r, onMarkPaid, onDelete }) {
+  const overdue = daysOverdue(r.dueDate);
+  const isOverdue = overdue !== null && overdue > 0;
+  const isDueToday = overdue === 0;
+
   return (
-    <div className="bg-base-100 rounded-2xl border border-base-300 overflow-hidden flex flex-col hover:border-base-content/20 transition-all hover:shadow-lg">
+    <div className={`bg-base-100 rounded-2xl border overflow-hidden flex flex-col transition-all hover:shadow-lg ${isOverdue ? "border-error/60 hover:border-error/80" : "border-base-300 hover:border-base-content/20"}`}>
       {/* Accent bar */}
-      <div className="h-1 w-full bg-error/70" />
+      <div className={`w-full ${isOverdue ? "h-1.5 bg-error" : "h-1 bg-error/70"}`} />
 
       <div className="p-5 flex flex-col gap-4 flex-1">
         {/* Top row */}
@@ -61,6 +74,21 @@ function InvoiceCard({ r, onMarkPaid, onDelete }) {
             <p className="text-base-content/60 font-medium mt-0.5">{formatDate(r.dueDate)}</p>
           </div>
         </div>
+
+        {/* Overdue indicator */}
+        {isOverdue && (
+          <div className="flex items-center gap-1.5 bg-error/10 border border-error/30 rounded-lg px-3 py-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-error shrink-0" />
+            <p className="text-xs font-bold text-error">{overdue} day{overdue !== 1 ? "s" : ""} overdue</p>
+          </div>
+        )}
+        {isDueToday && (
+          <div className="flex items-center gap-1.5 bg-warning/10 border border-warning/30 rounded-lg px-3 py-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-warning shrink-0" />
+            <p className="text-xs font-bold text-warning">Due today</p>
+          </div>
+        )}
+
         {r.loadRef && (
           <p className="text-xs text-base-content/30">
             <span className="uppercase tracking-wider text-[10px] font-bold">Ref</span>{" "}
