@@ -220,7 +220,7 @@ export default function Outstanding() {
             </div>
             <div className="flex gap-3 justify-end pt-2">
               <button className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={() => setMarkPaidTarget(null)} disabled={markingPaid}>Cancel</button>
-              <button className="btn btn-success" onClick={confirmMarkPaid} disabled={!paidDate || markingPaid}>
+              <button className="px-4 py-2 rounded-lg bg-success text-success-content text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50" onClick={confirmMarkPaid} disabled={!paidDate || markingPaid}>
                 {markingPaid ? <span className="loading loading-spinner loading-sm" /> : "Confirm"}
               </button>
             </div>
@@ -237,7 +237,7 @@ export default function Outstanding() {
             </p>
             <div className="flex gap-3 justify-end pt-2">
               <button className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancel</button>
-              <button className="btn btn-error" onClick={confirmDelete} disabled={deleting}>
+              <button className="px-4 py-2 rounded-lg bg-error text-error-content text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50" onClick={confirmDelete} disabled={deleting}>
                 {deleting ? <span className="loading loading-spinner loading-sm" /> : "Delete"}
               </button>
             </div>

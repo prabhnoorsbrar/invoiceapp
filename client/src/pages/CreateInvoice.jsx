@@ -684,7 +684,7 @@ export default function CreateInvoice({ company, currentUser }) {
               </div>
 
               <div className="flex gap-3">
-                <button className="btn btn-primary" onClick={handleSubmit}>
+                <button className="px-4 py-2 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity" onClick={handleSubmit}>
                   Create Invoice
                 </button>
                 <button
@@ -785,7 +785,7 @@ export default function CreateInvoice({ company, currentUser }) {
                 <p className="text-xs text-base-content/40">After saving you'll be prompted to add or pick a route.</p>
                 <div className="flex gap-3 justify-end pt-2 border-t border-base-300">
                   <button type="button" className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={closeClientModal} disabled={savingClient}>Cancel</button>
-                  <button type="submit" className="btn btn-primary px-6" disabled={savingClient}>
+                  <button type="submit" className="px-6 py-2 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50" disabled={savingClient}>
                     {savingClient ? <span className="loading loading-spinner loading-sm" /> : "Save Bill-To"}
                   </button>
                 </div>
@@ -839,7 +839,7 @@ export default function CreateInvoice({ company, currentUser }) {
                 </div>
                 <div className="flex justify-end gap-3 pt-2 border-t border-base-300">
                   <button type="button" className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={closeRouteModal} disabled={savingRoute}>Cancel</button>
-                  <button type="submit" className="btn btn-primary px-6" disabled={savingRoute}>
+                  <button type="submit" className="px-6 py-2 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50" disabled={savingRoute}>
                     {savingRoute ? <span className="loading loading-spinner loading-sm" /> : "Save Route"}
                   </button>
                 </div>

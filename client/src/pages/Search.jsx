@@ -140,7 +140,7 @@ export default function Search() {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search by invoice #, client, load ref, description…"
           />
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50" disabled={loading}>
             {loading ? <span className="loading loading-spinner loading-sm" /> : "Search"}
           </button>
         </div>
@@ -168,7 +168,7 @@ export default function Search() {
             </p>
             <div className="flex gap-3 justify-end pt-2">
               <button className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={() => setReopenTarget(null)} disabled={reopening}>Cancel</button>
-              <button className="btn btn-warning" onClick={confirmReopen} disabled={reopening}>
+              <button className="px-4 py-2 rounded-lg bg-warning text-warning-content text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50" onClick={confirmReopen} disabled={reopening}>
                 {reopening ? <span className="loading loading-spinner loading-sm" /> : "Confirm"}
               </button>
             </div>
@@ -185,7 +185,7 @@ export default function Search() {
             </p>
             <div className="flex gap-3 justify-end pt-2">
               <button className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancel</button>
-              <button className="btn btn-error" onClick={confirmDelete} disabled={deleting}>
+              <button className="px-4 py-2 rounded-lg bg-error text-error-content text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50" onClick={confirmDelete} disabled={deleting}>
                 {deleting ? <span className="loading loading-spinner loading-sm" /> : "Delete"}
               </button>
             </div>
