@@ -266,7 +266,7 @@ export default function Outstanding({ company, currentUser }) {
             />
           </div>
           <select
-            className="select bg-white/[0.05] border border-white/10 focus:border-primary/50 focus:outline-none text-sm text-base-content/70 transition-all"
+            className="select bg-[#0f1117] border border-white/10 focus:border-primary/50 focus:outline-none text-sm text-base-content/70 transition-all"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
