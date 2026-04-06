@@ -57,6 +57,7 @@ export const schemas = {
     cc: z.array(z.string().email()).optional().default([]),
     address: z.string().max(500).optional(),
     paymentTermsDays: z.number().int().min(0).max(365).optional().default(30),
+    showDueDate: z.boolean().optional().default(true),
   }),
 
   updateClient: z.object({
@@ -65,6 +66,7 @@ export const schemas = {
     cc: z.array(z.string().email()).optional(),
     address: z.string().max(500).optional(),
     paymentTermsDays: z.number().int().min(0).max(365).optional(),
+    showDueDate: z.boolean().optional(),
   }),
 
   updateMe: z.object({
