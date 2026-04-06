@@ -79,46 +79,18 @@ export function generateInvoicePdf({ invoice, client, company, user, options }) 
     return yPos + 10;
   };
 
-  // Header — logo if available, else company name text
-  const logo = company?.logo;
-  if (logo) {
-    try {
-      const ext = logo.startsWith("data:image/png") ? "PNG" : logo.startsWith("data:image/svg") ? "SVG" : "JPEG";
-      pdf.addImage(logo, ext, marginLeft, y, 36, 16, undefined, "FAST");
-      pdf.setFontSize(9);
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(0);
-      if (street) pdf.text(street, marginLeft, y + 20);
-      if (cityStateZip) pdf.text(cityStateZip, marginLeft, y + 25);
-      if (phone) pdf.text(phone, marginLeft, y + 30);
-      y += 38;
-    } catch {
-      // fallback to text if image fails
-      pdf.setTextColor(brandBlue.r, brandBlue.g, brandBlue.b);
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "bold");
-      pdf.text(businessName, marginLeft, y + 2);
-      pdf.setFontSize(9);
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(0);
-      if (street) pdf.text(street, marginLeft, y + 8);
-      if (cityStateZip) pdf.text(cityStateZip, marginLeft, y + 13);
-      if (phone) pdf.text(phone, marginLeft, y + 18);
-      y += 26;
-    }
-  } else {
-    pdf.setTextColor(brandBlue.r, brandBlue.g, brandBlue.b);
-    pdf.setFontSize(12);
-    pdf.setFont("helvetica", "bold");
-    pdf.text(businessName, marginLeft, y + 2);
-    pdf.setFontSize(9);
-    pdf.setFont("helvetica", "normal");
-    pdf.setTextColor(0);
-    if (street) pdf.text(street, marginLeft, y + 8);
-    if (cityStateZip) pdf.text(cityStateZip, marginLeft, y + 13);
-    if (phone) pdf.text(phone, marginLeft, y + 18);
-    y += 26;
-  }
+  // Header
+  pdf.setTextColor(brandBlue.r, brandBlue.g, brandBlue.b);
+  pdf.setFontSize(12);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(businessName, marginLeft, y + 2);
+  pdf.setFontSize(9);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(0);
+  if (street) pdf.text(street, marginLeft, y + 8);
+  if (cityStateZip) pdf.text(cityStateZip, marginLeft, y + 13);
+  if (phone) pdf.text(phone, marginLeft, y + 18);
+  y += 26;
 
   // Separator line
   pdf.setDrawColor(brandBlue.r, brandBlue.g, brandBlue.b);

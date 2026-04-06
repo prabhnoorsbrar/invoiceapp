@@ -149,7 +149,6 @@ export default function Settings({ currentUser, onUserUpdate, company, onCompany
     name: company?.name || "",
     address: company?.address || "",
     phone: company?.phone || "",
-    logo: company?.logo || "",
   });
   const [companyMsg, setCompanyMsg] = useState(null);
   const [savingCompany, setSavingCompany] = useState(false);
@@ -163,7 +162,7 @@ export default function Settings({ currentUser, onUserUpdate, company, onCompany
 
   // Sync company form if prop changes
   useEffect(() => {
-    setCompanyForm({ name: company?.name || "", address: company?.address || "", phone: company?.phone || "", logo: company?.logo || "" });
+    setCompanyForm({ name: company?.name || "", address: company?.address || "", phone: company?.phone || "" });
   }, [company]);
 
   async function handleAccountSave(e) {
@@ -200,7 +199,6 @@ export default function Settings({ currentUser, onUserUpdate, company, onCompany
         name: companyForm.name.trim(),
         address: companyForm.address.trim(),
         phone: companyForm.phone.trim(),
-        logo: companyForm.logo,
       });
       onCompanyUpdate?.(res.company);
       setCompanyMsg({ type: "success", text: "Company updated" });

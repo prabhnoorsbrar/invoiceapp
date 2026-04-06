@@ -40,7 +40,7 @@ export const register = asyncHandler(async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
     },
-    company: { id: company._id, name: company.name, address: company.address, phone: company.phone, logo: company.logo },
+    company: { id: company._id, name: company.name, address: company.address, phone: company.phone },
   });
 });
 
@@ -74,11 +74,10 @@ export const logout = asyncHandler(async (_req, res) => {
 export const updateCompany = asyncHandler(async (req, res) => {
   const company = await Company.findById(req.user.companyId)
   if (!company) throw new HttpError(404, 'Company not found')
-  const { name, address, phone, logo } = req.body
+  const { name, address, phone } = req.body
   if (name) company.name = name.trim()
   if (address !== undefined) company.address = address.trim()
   if (phone !== undefined) company.phone = phone.trim()
-  if (logo !== undefined) company.logo = logo
   await company.save()
   res.json({ company: { id: company._id, name: company.name, address: company.address, phone: company.phone, logo: company.logo } })
 })

@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Client from "../models/Client.js";
 import Invoice from "../models/Invoice.js";
 import { asyncHandler } from "../utils/errors.js";
@@ -30,7 +31,7 @@ export const remove = asyncHandler(async (req, res) => {
 export const stats = asyncHandler(async (req, res) => {
   const { companyId } = req.user;
   const rows = await Invoice.aggregate([
-    { $match: { companyId: companyId } },
+    { $match: { companyId: new mongoose.Types.ObjectId(companyId) } },
     { $group: {
       _id: "$clientId",
       totalCents: { $sum: "$amountCents" },
