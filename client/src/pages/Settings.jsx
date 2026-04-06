@@ -16,6 +16,7 @@ function ClientFormModal({ client, onSave, onDelete, onClose }) {
     emailTo: joinEmails(client.emailTo),
     cc: joinEmails(client.cc),
     paymentTermsDays: client.paymentTermsDays ?? 30,
+    showDueDate: client.showDueDate ?? true,
   });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -33,6 +34,7 @@ function ClientFormModal({ client, onSave, onDelete, onClose }) {
         emailTo: parseEmails(form.emailTo),
         cc: parseEmails(form.cc),
         paymentTermsDays: parseInt(form.paymentTermsDays, 10) || 30,
+        showDueDate: form.showDueDate,
       };
       const result = isNew
         ? await api.createClient(payload)
@@ -79,6 +81,16 @@ function ClientFormModal({ client, onSave, onDelete, onClose }) {
             <label className="label pb-1"><span className="label-text font-semibold">Net Terms (days)</span></label>
             <input type="number" min={0} max={365} className="input w-28 bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none" value={form.paymentTermsDays} onChange={(e) => setForm((f) => ({ ...f, paymentTermsDays: e.target.value }))} />
           </div>
+          <label className="flex items-center justify-between bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 cursor-pointer hover:bg-white/[0.05] transition-colors">
+            <div>
+              <p className="text-sm font-semibold">Show due date on PDF</p>
+              <p className="text-xs text-base-content/40 mt-0.5">When off, due date and net terms are hidden from the client PDF</p>
+            </div>
+            <div className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${form.showDueDate ? "bg-primary" : "bg-white/10"}`}>
+              <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${form.showDueDate ? "translate-x-5" : "translate-x-0"}`} />
+              <input type="checkbox" className="sr-only" checked={form.showDueDate} onChange={(e) => setForm((f) => ({ ...f, showDueDate: e.target.checked }))} />
+            </div>
+          </label>
           {error && <p className="text-error text-sm">{error}</p>}
 
           {!isNew && confirmDelete ? (

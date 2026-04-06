@@ -11,6 +11,7 @@ const ClientSchema = new mongoose.Schema(
     cc: [{ type: String }],
     address: String,
     paymentTermsDays: { type: Number, default: 30 },
+    showDueDate: { type: Boolean, default: true },
     active: { type: Boolean, default: true },
   },
   { timestamps: true }
