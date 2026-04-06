@@ -6,24 +6,43 @@ export default function Login({ onSuccess, sessionExpired }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
 
   async function handleLogin(e) {
     e.preventDefault();
     setError("");
     setLoading(true);
-    try {
-      const res = await api.login(email, password);
-      if (res?.user) {
-        setCurrentUser(res.user);
-        setCurrentCompany(res.company);
-        onSuccess?.(res.user, res.company);
-      } else {
-        setError("Login failed");
+    setStatus("");
+
+    const MAX_ATTEMPTS = 5;
+    const DELAYS = [0, 4000, 6000, 8000, 10000];
+
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      if (attempt > 0) {
+        setStatus(`Server is waking up… (${attempt}/${MAX_ATTEMPTS - 1})`);
+        await new Promise((r) => setTimeout(r, DELAYS[attempt]));
       }
-    } catch (err) {
-      setError(err.message || "Login failed");
-    } finally {
-      setLoading(false);
+      try {
+        const res = await api.login(email, password);
+        if (res?.user) {
+          setCurrentUser(res.user);
+          setCurrentCompany(res.company);
+          onSuccess?.(res.user, res.company);
+          return;
+        }
+        setError("Login failed");
+        setLoading(false);
+        setStatus("");
+        return;
+      } catch (err) {
+        const isNetworkErr = err.message?.includes("fetch") || err.message?.includes("network") || err.message?.includes("Failed");
+        if (!isNetworkErr || attempt === MAX_ATTEMPTS - 1) {
+          setError(err.message || "Login failed");
+          setLoading(false);
+          setStatus("");
+          return;
+        }
+      }
     }
   }
 
@@ -74,7 +93,7 @@ export default function Login({ onSuccess, sessionExpired }) {
             className="w-full py-3 rounded-xl bg-primary text-primary-content text-sm font-bold hover:opacity-90 active:opacity-80 transition-opacity disabled:opacity-50"
             disabled={loading}
           >
-            {loading ? "Logging in…" : "Log In"}
+            {loading ? (status || "Logging in…") : "Log In"}
           </button>
         </form>
       </div>
