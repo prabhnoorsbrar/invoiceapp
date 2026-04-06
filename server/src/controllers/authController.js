@@ -79,7 +79,7 @@ export const updateCompany = asyncHandler(async (req, res) => {
   if (address !== undefined) company.address = address.trim()
   if (phone !== undefined) company.phone = phone.trim()
   await company.save()
-  res.json({ company: { id: company._id, name: company.name, address: company.address, phone: company.phone } })
+  res.json({ company: { id: company._id, name: company.name, address: company.address, phone: company.phone, logo: company.logo } })
 })
 
 export const updateMe = asyncHandler(async (req, res) => {

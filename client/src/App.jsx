@@ -26,6 +26,7 @@ export default function App() {
     return () => window.removeEventListener("auth:expired", handleExpired);
   }, []);
 
+
   if (!authed) {
     return (
       <Login

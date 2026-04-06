@@ -132,6 +132,7 @@ function ClientFormModal({ client, onSave, onDelete, onClose }) {
 export default function Settings({ currentUser, onUserUpdate, company, onCompanyUpdate }) {
   const [tab, setTab] = useState("clients");
   const [clients, setClients] = useState([]);
+  const [clientStats, setClientStats] = useState({});
   const [loadingClients, setLoadingClients] = useState(true);
   const [editTarget, setEditTarget] = useState(null);
 
@@ -153,7 +154,10 @@ export default function Settings({ currentUser, onUserUpdate, company, onCompany
   const [savingCompany, setSavingCompany] = useState(false);
 
   useEffect(() => {
-    api.listClients().then((data) => { setClients(data); setLoadingClients(false); }).catch(() => setLoadingClients(false));
+    Promise.all([api.listClients(), api.clientStats()])
+      .then(([data, stats]) => { setClients(data); setClientStats(stats); })
+      .catch(() => {})
+      .finally(() => setLoadingClients(false));
   }, []);
 
   // Sync company form if prop changes
@@ -238,22 +242,32 @@ export default function Settings({ currentUser, onUserUpdate, company, onCompany
             <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-12 text-center">
               <p className="text-base-content/30 text-sm">No clients yet. Add your first client above.</p>
             </div>
-          ) : clients.map((c) => (
-            <div key={c._id} className="bg-white/[0.04] border border-white/[0.08] rounded-2xl px-5 py-4 flex items-start justify-between gap-4 hover:bg-white/[0.07] transition-colors">
-              <div className="min-w-0 space-y-1">
-                <p className="font-bold text-base-content">{c.name}</p>
-                {c.address && <p className="text-xs text-base-content/40 whitespace-pre-line">{c.address}</p>}
-                <div className="flex flex-wrap gap-3 text-xs text-base-content/40 mt-1">
-                  <span>Net {c.paymentTermsDays}d</span>
-                  {c.emailTo?.length > 0 && <span className="text-primary/70">To: {c.emailTo.join(", ")}</span>}
-                  {c.cc?.length > 0 && <span className="text-base-content/40">CC: {c.cc.join(", ")}</span>}
+          ) : clients.map((c) => {
+            const s = clientStats[c._id] || {};
+            const fmt = (cents) => cents != null ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100) : null;
+            return (
+              <div key={c._id} className="bg-white/[0.04] border border-white/[0.08] rounded-2xl px-5 py-4 flex items-start justify-between gap-4 hover:bg-white/[0.07] transition-colors">
+                <div className="min-w-0 space-y-1.5">
+                  <p className="font-bold text-base-content">{c.name}</p>
+                  {c.address && <p className="text-xs text-base-content/40 whitespace-pre-line">{c.address}</p>}
+                  <div className="flex flex-wrap gap-3 text-xs text-base-content/40">
+                    <span>Net {c.paymentTermsDays}d</span>
+                    {!c.showDueDate && <span className="text-warning/70">No due date on PDF</span>}
+                  </div>
+                  {s.invoiceCount > 0 && (
+                    <div className="flex flex-wrap gap-3 text-xs pt-0.5">
+                      <span className="text-base-content/50">{s.invoiceCount} invoice{s.invoiceCount !== 1 ? "s" : ""}</span>
+                      <span className="text-emerald-400/80">Billed: {fmt(s.totalCents)}</span>
+                      {s.outstandingCents > 0 && <span className="text-amber-400/80">Outstanding: {fmt(s.outstandingCents)}</span>}
+                    </div>
+                  )}
                 </div>
+                <button onClick={() => setEditTarget(c)} className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-white/[0.06] border border-white/10 hover:bg-white/[0.12] hover:border-white/20 transition-all">
+                  Edit
+                </button>
               </div>
-              <button onClick={() => setEditTarget(c)} className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-white/[0.06] border border-white/10 hover:bg-white/[0.12] hover:border-white/20 transition-all">
-                Edit
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -278,6 +292,32 @@ export default function Settings({ currentUser, onUserUpdate, company, onCompany
             </label>
             <input className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none px-4" placeholder="(555) 000-0000" value={companyForm.phone} onChange={(e) => setCompanyForm((f) => ({ ...f, phone: e.target.value }))} />
           </div>
+          {/* Logo upload */}
+          <div className="form-control">
+            <label className="label pb-1">
+              <span className="label-text font-semibold">Company Logo</span>
+              <span className="label-text-alt text-base-content/40">Shown on PDFs</span>
+            </label>
+            {companyForm.logo ? (
+              <div className="flex items-center gap-3">
+                <img src={companyForm.logo} alt="Logo" className="h-12 object-contain rounded bg-white/[0.06] p-1 border border-white/10" />
+                <button type="button" onClick={() => setCompanyForm((f) => ({ ...f, logo: "" }))} className="text-xs text-error/70 hover:text-error transition-colors">Remove</button>
+              </div>
+            ) : (
+              <label className="flex items-center justify-center w-full h-16 rounded-xl border border-dashed border-white/20 hover:border-primary/40 hover:bg-primary/[0.04] transition-all cursor-pointer text-sm text-base-content/30 hover:text-primary/60">
+                + Upload Logo (PNG, JPG)
+                <input type="file" className="hidden" accept="image/png,image/jpeg,image/svg+xml" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = (ev) => setCompanyForm((f) => ({ ...f, logo: ev.target.result }));
+                  reader.readAsDataURL(file);
+                  e.target.value = "";
+                }} />
+              </label>
+            )}
+          </div>
+
           {companyMsg && (
             <p className={`text-sm font-medium ${companyMsg.type === "success" ? "text-success" : companyMsg.type === "error" ? "text-error" : "text-base-content/60"}`}>{companyMsg.text}</p>
           )}

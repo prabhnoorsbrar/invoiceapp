@@ -114,6 +114,9 @@ export const api = {
   deleteClient(id) {
     return request(`/api/clients/${encodeURIComponent(id)}`, { method: "DELETE" });
   },
+  clientStats() {
+    return request(`/api/clients/stats`);
+  },
   updateMe(payload) {
     return request(`/api/auth/me`, { method: "PUT", body: payload });
   },

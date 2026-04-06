@@ -1,4 +1,6 @@
+import mongoose from "mongoose";
 import Client from "../models/Client.js";
+import Invoice from "../models/Invoice.js";
 import { asyncHandler } from "../utils/errors.js";
 
 export const list = asyncHandler(async (req, res) => {
@@ -23,6 +25,23 @@ export const remove = asyncHandler(async (req, res) => {
   client.active = false;
   await client.save();
   res.json({ ok: true });
+});
+
+// GET /api/clients/stats — returns { [clientId]: { totalCents, outstandingCents, invoiceCount } }
+export const stats = asyncHandler(async (req, res) => {
+  const { companyId } = req.user;
+  const rows = await Invoice.aggregate([
+    { $match: { companyId: new mongoose.Types.ObjectId(companyId) } },
+    { $group: {
+      _id: "$clientId",
+      totalCents: { $sum: "$amountCents" },
+      outstandingCents: { $sum: { $cond: [{ $eq: ["$status", "outstanding"] }, "$amountCents", 0] } },
+      invoiceCount: { $sum: 1 },
+    }},
+  ]);
+  const map = {};
+  for (const r of rows) map[String(r._id)] = { totalCents: r.totalCents, outstandingCents: r.outstandingCents, invoiceCount: r.invoiceCount };
+  res.json(map);
 });
 
 export const update = asyncHandler(async (req, res) => {
