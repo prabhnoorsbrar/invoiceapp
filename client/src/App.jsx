@@ -51,9 +51,9 @@ export default function App() {
     <div className="min-h-screen bg-base-200 flex flex-col">
       {/* Top header */}
       <header className="sticky top-0 z-40 px-4 py-3 flex items-center justify-between shadow-lg border-b border-white/[0.08]" style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.18) 0%, rgba(109,40,217,0.14) 50%, rgba(15,23,42,0.85) 100%)", backdropFilter: "blur(20px)" }}>
-        <span className="font-black text-xl tracking-tight text-base-content">
+        <button onClick={() => setView("outstanding")} className="font-black text-xl tracking-tight text-base-content hover:opacity-80 transition-opacity cursor-pointer">
           US Pride Logistics
-        </span>
+        </button>
 
         {/* Desktop nav */}
         <nav className="hidden md:flex gap-1">
