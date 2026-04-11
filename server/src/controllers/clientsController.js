@@ -27,7 +27,7 @@ export const remove = asyncHandler(async (req, res) => {
   res.json({ ok: true });
 });
 
-// GET /api/clients/stats — returns { [clientId]: { totalCents, outstandingCents, invoiceCount } }
+// GET /api/clients/stats — returns { [clientId]: { totalCents, outstandingCents, invoiceCount, avgDaysToPay } }
 export const stats = asyncHandler(async (req, res) => {
   const { companyId } = req.user;
   const rows = await Invoice.aggregate([
@@ -37,10 +37,22 @@ export const stats = asyncHandler(async (req, res) => {
       totalCents: { $sum: "$amountCents" },
       outstandingCents: { $sum: { $cond: [{ $eq: ["$status", "outstanding"] }, "$amountCents", 0] } },
       invoiceCount: { $sum: 1 },
+      paidDaysSum: { $sum: { $cond: [
+        { $and: [{ $eq: ["$status", "paid"] }, { $gt: ["$paidDate", null] }] },
+        { $divide: [{ $subtract: ["$paidDate", "$invoiceDate"] }, 86400000] },
+        0,
+      ]}},
+      paidCount: { $sum: { $cond: [
+        { $and: [{ $eq: ["$status", "paid"] }, { $gt: ["$paidDate", null] }] },
+        1, 0,
+      ]}},
     }},
   ]);
   const map = {};
-  for (const r of rows) map[String(r._id)] = { totalCents: r.totalCents, outstandingCents: r.outstandingCents, invoiceCount: r.invoiceCount };
+  for (const r of rows) {
+    const avgDaysToPay = r.paidCount > 0 ? Math.round(r.paidDaysSum / r.paidCount) : null;
+    map[String(r._id)] = { totalCents: r.totalCents, outstandingCents: r.outstandingCents, invoiceCount: r.invoiceCount, avgDaysToPay };
+  }
   res.json(map);
 });
 

@@ -259,6 +259,11 @@ export default function Settings({ currentUser, onUserUpdate, company, onCompany
                       <span className="text-base-content/50">{s.invoiceCount} invoice{s.invoiceCount !== 1 ? "s" : ""}</span>
                       <span className="text-emerald-400/80">Billed: {fmt(s.totalCents)}</span>
                       {s.outstandingCents > 0 && <span className="text-amber-400/80">Outstanding: {fmt(s.outstandingCents)}</span>}
+                      {s.avgDaysToPay != null && (
+                        <span className={`${s.avgDaysToPay <= 30 ? "text-emerald-400/80" : s.avgDaysToPay <= 45 ? "text-amber-400/80" : "text-red-400/80"}`}>
+                          Avg pay: {s.avgDaysToPay}d
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
