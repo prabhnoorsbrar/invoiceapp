@@ -5,10 +5,14 @@ import {
   listByClient,
   createPreset,
   updatePrice,
+  updateRoute,
+  archiveRoute,
 } from "../controllers/routesController.js";
 const r = Router();
 r.use(requireAuth);
 r.get("/:clientId", listByClient);
 r.post("/", requireRole("admin", "finance"), validate(schemas.createRoute), createPreset);
 r.post("/:routeId/price", requireRole("admin", "finance"), validate(schemas.updatePrice), updatePrice);
+r.patch("/:routeId", requireRole("admin", "finance"), validate(schemas.updateRoute), updateRoute);
+r.delete("/:routeId", requireRole("admin", "finance"), archiveRoute);
 export default r;

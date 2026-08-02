@@ -83,7 +83,7 @@ export const updateCompany = asyncHandler(async (req, res) => {
 })
 
 export const updateMe = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user.uid);
   if (!user) throw new HttpError(404, "User not found");
   const { email, currentPassword, newPassword } = req.body;
   if (newPassword) {

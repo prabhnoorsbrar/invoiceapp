@@ -118,6 +118,14 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
   const [showRouteModal, setShowRouteModal] = useState(false);
   const [routeForm, setRouteForm] = useState(defaultRouteFormState);
   const [savingRoute, setSavingRoute] = useState(false);
+
+  const [editRouteTarget, setEditRouteTarget] = useState(null);
+  const [editRouteForm, setEditRouteForm] = useState(defaultRouteFormState);
+  const [savingEditRoute, setSavingEditRoute] = useState(false);
+  const [editRouteError, setEditRouteError] = useState("");
+  const [confirmArchiveRoute, setConfirmArchiveRoute] = useState(false);
+  const [archivingRoute, setArchivingRoute] = useState(false);
+
   const prefillRef = React.useRef(prefill);
 
   useEffect(() => {
@@ -445,6 +453,116 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
     }
   }
 
+  function latestRouteAmount(route) {
+    const sorted = Array.isArray(route?.prices)
+      ? [...route.prices].sort(
+          (a, b) => new Date(b.effectiveFrom) - new Date(a.effectiveFrom)
+        )
+      : [];
+    return sorted[0]?.amountCents ?? null;
+  }
+
+  function openEditRouteModal(route) {
+    const latestAmount = latestRouteAmount(route);
+    setEditRouteTarget(route);
+    setEditRouteForm({
+      name: route.name || "",
+      description: route.descriptionTemplate || "",
+      amount:
+        typeof latestAmount === "number" && Number.isFinite(latestAmount)
+          ? centsToInputValue(latestAmount)
+          : "",
+    });
+    setConfirmArchiveRoute(false);
+    setEditRouteError("");
+  }
+
+  function closeEditRouteModal() {
+    if (savingEditRoute || archivingRoute) return;
+    setEditRouteTarget(null);
+    setEditRouteForm(defaultRouteFormState);
+    setConfirmArchiveRoute(false);
+    setEditRouteError("");
+  }
+
+  function handleEditRouteFormChange(field, value) {
+    setEditRouteForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function handleEditRouteSubmit(event) {
+    event.preventDefault();
+    if (!editRouteTarget || savingEditRoute) return;
+
+    const name = editRouteForm.name.trim();
+    const description = editRouteForm.description.trim();
+    const amountCents = parseAmountToCents(editRouteForm.amount);
+
+    if (!name && !description) {
+      setEditRouteError("Provide a name or description for the route.");
+      return;
+    }
+    if (!amountCents || amountCents <= 0) {
+      setEditRouteError("Enter an amount greater than $0.00 for the route.");
+      return;
+    }
+
+    setSavingEditRoute(true);
+    setEditRouteError("");
+    try {
+      let updated = editRouteTarget;
+
+      const nameChanged = name !== (editRouteTarget.name || "");
+      const descChanged = description !== (editRouteTarget.descriptionTemplate || "");
+      if (nameChanged || descChanged) {
+        updated = await api.updateRoutePreset(editRouteTarget._id, {
+          name: name || description,
+          descriptionTemplate: description || name || "",
+        });
+      }
+
+      const currentAmount = latestRouteAmount(updated);
+      if (amountCents !== currentAmount) {
+        updated = await api.updateRoutePrice(editRouteTarget._id, {
+          newAmountCents: amountCents,
+        });
+      }
+
+      setRoutes((prev) =>
+        sortRoutesByLabel(prev.map((r) => (r._id === updated._id ? updated : r)))
+      );
+      if (selectedRoute?._id === updated._id) handleRouteSelect(updated);
+      setEditRouteTarget(null);
+      setEditRouteForm(defaultRouteFormState);
+    } catch (err) {
+      console.error(err);
+      setEditRouteError(err.message || "Failed to update route.");
+    } finally {
+      setSavingEditRoute(false);
+    }
+  }
+
+  async function handleArchiveRoute() {
+    if (!editRouteTarget || archivingRoute) return;
+    setArchivingRoute(true);
+    setEditRouteError("");
+    try {
+      await api.archiveRoute(editRouteTarget._id);
+      setRoutes((prev) => prev.filter((r) => r._id !== editRouteTarget._id));
+      if (selectedRoute?._id === editRouteTarget._id) {
+        setSelectedRoute(null);
+        resetLineItems();
+      }
+      setEditRouteTarget(null);
+      setEditRouteForm(defaultRouteFormState);
+      setConfirmArchiveRoute(false);
+    } catch (err) {
+      console.error(err);
+      setEditRouteError(err.message || "Failed to remove route.");
+    } finally {
+      setArchivingRoute(false);
+    }
+  }
+
   const allowPrimaryAmountEdit = overridePrice || routeAmountCents === null;
   const allowPrimaryDescriptionEdit =
     overrideDescription || !routeDescription;
@@ -515,20 +633,35 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                       )[0]
                     : null;
                   return (
-                    <button
+                    <div
                       key={route._id}
-                      onClick={() => handleRouteSelect(route)}
-                      className="w-full text-left bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] p-4 rounded-xl hover:bg-white/[0.08] hover:border-white/[0.15] hover:shadow-xl transition-all"
+                      className="w-full flex items-center gap-2 bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] rounded-xl hover:bg-white/[0.08] hover:border-white/[0.15] hover:shadow-xl transition-all"
                     >
-                      <div className="text-sm font-semibold text-base-content mb-1">
-                        {route.descriptionTemplate || route.name}
-                      </div>
-                      <div className="text-sm text-base-content/50">
-                        {latest?.amountCents
-                          ? `Suggested: $${(latest.amountCents / 100).toFixed(2)}`
-                          : "No price listed"}
-                      </div>
-                    </button>
+                      <button
+                        onClick={() => handleRouteSelect(route)}
+                        className="flex-1 min-w-0 text-left p-4"
+                      >
+                        <div className="text-sm font-semibold text-base-content mb-1">
+                          {route.descriptionTemplate || route.name}
+                        </div>
+                        <div className="text-sm text-base-content/50">
+                          {latest?.amountCents
+                            ? `Suggested: $${(latest.amountCents / 100).toFixed(2)}`
+                            : "No price listed"}
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditRouteModal(route);
+                        }}
+                        className="shrink-0 mr-3 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white/[0.06] border border-white/10 hover:bg-white/[0.12] hover:border-white/20 transition-all"
+                        title="Edit route"
+                      >
+                        Edit
+                      </button>
+                    </div>
                   );
                 })}
                 <button className="px-3 py-1.5 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity mt-3" onClick={() => setStep(1)}>
@@ -872,7 +1005,92 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
               </form>
             </div>
           </div>
-        
+
+        </div>
+      )}
+      {editRouteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="max-h-full w-full max-w-lg overflow-y-auto">
+            <div className="bg-base-100/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
+              <div className="flex items-center justify-between p-6 border-b border-white/10">
+                <h2 className="text-xl font-bold text-base-content">Edit Route</h2>
+                <button className="btn btn-sm btn-ghost" onClick={closeEditRouteModal}>✕</button>
+              </div>
+              <form className="p-6 space-y-4" onSubmit={handleEditRouteSubmit}>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="form-control">
+                    <label className="label pb-1"><span className="label-text font-semibold">Route name</span></label>
+                    <input
+                      className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4"
+                      placeholder="Chicago → Dallas"
+                      value={editRouteForm.name}
+                      onChange={(e) => handleEditRouteFormChange("name", e.target.value)}
+                    />
+                  </div>
+                  <div className="form-control">
+                    <label className="label pb-1"><span className="label-text font-semibold">Amount (USD)</span></label>
+                    <input
+                      className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4"
+                      type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      placeholder="1200.00"
+                      value={editRouteForm.amount}
+                      onChange={(e) => handleEditRouteFormChange("amount", e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="form-control">
+                  <label className="label pb-1"><span className="label-text font-semibold">Description</span></label>
+                  <textarea
+                    className="textarea w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none focus:bg-white/[0.09] transition-colors px-4 py-3"
+                    rows={3}
+                    placeholder="Linehaul from Chicago to Dallas"
+                    value={editRouteForm.description}
+                    onChange={(e) => handleEditRouteFormChange("description", e.target.value)}
+                  />
+                </div>
+                <p className="text-xs text-base-content/40">Changing the amount adds a new price effective today — past invoices keep the rate they were created with.</p>
+                {editRouteError && <p className="text-error text-sm">{editRouteError}</p>}
+
+                {confirmArchiveRoute ? (
+                  <div className="bg-error/10 border border-error/30 rounded-xl p-4 space-y-3">
+                    <p className="text-sm font-semibold text-error">
+                      Remove <span className="font-bold">{editRouteTarget.descriptionTemplate || editRouteTarget.name}</span>? It won&apos;t appear as a route option anymore.
+                    </p>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => setConfirmArchiveRoute(false)} className="flex-1 py-2 rounded-lg border border-white/10 text-sm font-semibold hover:bg-white/[0.06] transition-colors" disabled={archivingRoute}>Cancel</button>
+                      <button
+                        type="button"
+                        className="flex-1 py-2 rounded-lg bg-error text-error-content text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-opacity"
+                        disabled={archivingRoute}
+                        onClick={handleArchiveRoute}
+                      >
+                        {archivingRoute ? <span className="loading loading-spinner loading-sm" /> : "Yes, Remove"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex justify-between gap-3 pt-2 border-t border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmArchiveRoute(true)}
+                      className="px-4 py-2 rounded-lg bg-red-600 border border-red-500 text-white text-sm font-bold hover:bg-red-500 active:bg-red-700 shadow-[0_0_12px_rgba(239,68,68,0.4)] hover:shadow-[0_0_18px_rgba(239,68,68,0.6)] transition-all"
+                    >
+                      Remove
+                    </button>
+                    <div className="flex gap-3">
+                      <button type="button" className="px-4 py-2 rounded-lg border-2 border-base-content/40 text-sm font-semibold hover:bg-base-content/10 transition-colors" onClick={closeEditRouteModal} disabled={savingEditRoute}>Cancel</button>
+                      <button type="submit" className="px-6 py-2 rounded-lg bg-primary text-primary-content text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50" disabled={savingEditRoute}>
+                        {savingEditRoute ? <span className="loading loading-spinner loading-sm" /> : "Save Changes"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </form>
+            </div>
+          </div>
         </div>
       )}
     </div>

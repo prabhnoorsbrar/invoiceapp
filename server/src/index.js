@@ -64,13 +64,3 @@ app.use((err, _req, res, _next) => {
   const message = status < 500 ? err.message : "Internal server error";
   res.status(status).json({ error: message });
 });
-
-// ---- server/src/utils/errors.js ----
-export class HttpError extends Error {
-  constructor(status, message) {
-    super(message);
-    this.status = status;
-  }
-}
-export const asyncHandler = (fn) => (req, res, next) =>
-  Promise.resolve(fn(req, res, next)).catch(next);

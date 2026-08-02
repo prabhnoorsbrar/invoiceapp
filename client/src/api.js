@@ -131,6 +131,15 @@ export const api = {
   createRoutePreset(payload) {
     return request(`/api/routes`, { method: "POST", body: payload });
   },
+  updateRoutePreset(routeId, payload) {
+    return request(`/api/routes/${encodeURIComponent(routeId)}`, { method: "PATCH", body: payload });
+  },
+  updateRoutePrice(routeId, payload) {
+    return request(`/api/routes/${encodeURIComponent(routeId)}/price`, { method: "POST", body: payload });
+  },
+  archiveRoute(routeId) {
+    return request(`/api/routes/${encodeURIComponent(routeId)}`, { method: "DELETE" });
+  },
 
   // Invoices
   lastInvoiceNumber() {
