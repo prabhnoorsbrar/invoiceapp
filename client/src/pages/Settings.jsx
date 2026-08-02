@@ -297,32 +297,6 @@ export default function Settings({ currentUser, onUserUpdate, company, onCompany
             </label>
             <input className="input w-full bg-white/[0.06] border border-white/10 focus:border-primary/60 focus:outline-none px-4" placeholder="(555) 000-0000" value={companyForm.phone} onChange={(e) => setCompanyForm((f) => ({ ...f, phone: e.target.value }))} />
           </div>
-          {/* Logo upload */}
-          <div className="form-control">
-            <label className="label pb-1">
-              <span className="label-text font-semibold">Company Logo</span>
-              <span className="label-text-alt text-base-content/40">Shown on PDFs</span>
-            </label>
-            {companyForm.logo ? (
-              <div className="flex items-center gap-3">
-                <img src={companyForm.logo} alt="Logo" className="h-12 object-contain rounded bg-white/[0.06] p-1 border border-white/10" />
-                <button type="button" onClick={() => setCompanyForm((f) => ({ ...f, logo: "" }))} className="text-xs text-error/70 hover:text-error transition-colors">Remove</button>
-              </div>
-            ) : (
-              <label className="flex items-center justify-center w-full h-16 rounded-xl border border-dashed border-white/20 hover:border-primary/40 hover:bg-primary/[0.04] transition-all cursor-pointer text-sm text-base-content/30 hover:text-primary/60">
-                + Upload Logo (PNG, JPG)
-                <input type="file" className="hidden" accept="image/png,image/jpeg,image/svg+xml" onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  const reader = new FileReader();
-                  reader.onload = (ev) => setCompanyForm((f) => ({ ...f, logo: ev.target.result }));
-                  reader.readAsDataURL(file);
-                  e.target.value = "";
-                }} />
-              </label>
-            )}
-          </div>
-
           {companyMsg && (
             <p className={`text-sm font-medium ${companyMsg.type === "success" ? "text-success" : companyMsg.type === "error" ? "text-error" : "text-base-content/60"}`}>{companyMsg.text}</p>
           )}

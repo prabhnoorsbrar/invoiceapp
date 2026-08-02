@@ -83,7 +83,7 @@ export const schemas = {
 
   updateInvoice: z.object({
     invoiceNumber: z.string().max(50).optional(),
-    invoiceDate: z.string().optional(),
+    invoiceDate: z.string().datetime({ offset: true }).or(z.string().date()).optional(),
     description: z.string().min(1).max(500).optional(),
     amountCents: z.number().int().positive().optional(),
     loadRef: z.string().max(100).optional().nullable(),
@@ -108,5 +108,13 @@ export const schemas = {
   updatePrice: z.object({
     newAmountCents: z.number().int().positive("Amount must be positive"),
     effectiveFrom: z.string().optional(),
+  }),
+
+  updateRoute: z.object({
+    name: z.string().min(1, "Name required").max(200).optional(),
+    descriptionTemplate: z.string().max(500).optional(),
+    pickupCity: z.string().max(100).optional(),
+    deliveryCity: z.string().max(100).optional(),
+    active: z.boolean().optional(),
   }),
 };
