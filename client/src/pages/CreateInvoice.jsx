@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { api } from "../api";
 import InvoicePreview from "../components/InvoicePreview";
+import Modal from "../components/Modal";
 const PRIMARY_LINE_ID = "primary";
 
 const defaultClientFormState = {
@@ -871,16 +872,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
 
             
       {showClientModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="max-h-full w-full max-w-lg overflow-y-auto">
-            <div className="bg-base-100/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
-              <div className="flex items-center justify-between p-6 border-b border-white/10">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-base-content/40 mb-1">Billing Details</p>
-                  <h2 className="text-xl font-bold text-base-content">Add Bill-To</h2>
-                </div>
-                <button className="btn btn-sm btn-ghost" onClick={closeClientModal}>✕</button>
-              </div>
+        <Modal onClose={closeClientModal} title="Add Bill-To" eyebrow="Billing Details" size="lg" closeDisabled={savingClient}>
               <form className="p-6 space-y-4" onSubmit={handleClientCreate}>
                 <div className="form-control">
                   <label className="label pb-1"><span className="label-text font-semibold">Client name</span></label>
@@ -933,18 +925,10 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
       {showRouteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="max-h-full w-full max-w-lg overflow-y-auto">
-            <div className="bg-base-100/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
-              <div className="flex items-center justify-between p-6 border-b border-white/10">
-                <h2 className="text-xl font-bold text-base-content">Add Route</h2>
-                <button className="btn btn-sm btn-ghost" onClick={closeRouteModal}>✕</button>
-              </div>
+        <Modal onClose={closeRouteModal} title="Add Route" size="lg" closeDisabled={savingRoute}>
               <form className="p-6 space-y-4" onSubmit={handleRouteCreate}>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="form-control">
@@ -987,19 +971,10 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-
-        </div>
+        </Modal>
       )}
       {editRouteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="max-h-full w-full max-w-lg overflow-y-auto">
-            <div className="bg-base-100/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
-              <div className="flex items-center justify-between p-6 border-b border-white/10">
-                <h2 className="text-xl font-bold text-base-content">Edit Route</h2>
-                <button className="btn btn-sm btn-ghost" onClick={closeEditRouteModal}>✕</button>
-              </div>
+        <Modal onClose={closeEditRouteModal} title="Edit Route" size="lg" closeDisabled={savingEditRoute || archivingRoute}>
               <form className="p-6 space-y-4" onSubmit={handleEditRouteSubmit}>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="form-control">
@@ -1073,9 +1048,7 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
                   </div>
                 )}
               </form>
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
     </div>

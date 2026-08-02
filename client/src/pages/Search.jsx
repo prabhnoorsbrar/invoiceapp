@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { api } from "../api";
+import Modal from "../components/Modal";
 import { generateInvoicePdf } from "../utils/generateInvoicePdf";
 
 function currency(cents) {
@@ -199,8 +200,7 @@ export default function Search({ onDuplicate, company, currentUser, showToast })
       )}
 
       {reopenTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-base-100/80 backdrop-blur-xl rounded-2xl p-6 w-full max-w-sm border border-white/10 shadow-2xl space-y-4">
+        <Modal onClose={() => setReopenTarget(null)} label="Confirm unmark as paid" size="sm" bodyClassName="p-6 space-y-4" closeDisabled={reopening}>
             <h3 className="text-lg font-bold text-base-content">Unmark as Paid?</h3>
             <p className="text-sm text-base-content/50">
               <strong>#{reopenTarget.invoiceNumber}</strong> · {reopenTarget.client?.name} will be moved back to outstanding.
@@ -211,13 +211,11 @@ export default function Search({ onDuplicate, company, currentUser, showToast })
                 {reopening ? <span className="loading loading-spinner loading-sm" /> : "Confirm"}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-base-100/80 backdrop-blur-xl rounded-2xl p-6 w-full max-w-sm border border-white/10 shadow-2xl space-y-4">
+        <Modal onClose={() => setDeleteTarget(null)} label="Confirm invoice deletion" size="sm" bodyClassName="p-6 space-y-4" closeDisabled={deleting}>
             <h3 className="text-lg font-bold text-base-content">Delete Invoice?</h3>
             <p className="text-sm text-base-content/50">
               <strong>#{deleteTarget.invoiceNumber}</strong> · {deleteTarget.client?.name} · {currency(deleteTarget.amountCents)} will be permanently deleted.
@@ -228,8 +226,7 @@ export default function Search({ onDuplicate, company, currentUser, showToast })
                 {deleting ? <span className="loading loading-spinner loading-sm" /> : "Delete"}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );
