@@ -35,14 +35,29 @@ function parseAddress(addressStr) {
 export function generateInvoicePdf({ invoice, client, company, user, options }) {
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
   const marginLeft = 20;
   const marginRight = 20;
   const usableWidth = pageWidth - marginLeft - marginRight;
+  // Content stops here; the page-number line sits in the margin below it.
+  const bottomLimit = pageHeight - 20;
+  const newPageTop = 28;
   let y = 22;
 
-  // Top accent bar
-  pdf.setFillColor(brandBlue.r, brandBlue.g, brandBlue.b);
-  pdf.rect(0, 0, pageWidth, 6, "F");
+  const drawAccentBar = () => {
+    pdf.setFillColor(brandBlue.r, brandBlue.g, brandBlue.b);
+    pdf.rect(0, 0, pageWidth, 6, "F");
+  };
+
+  // Break to a fresh page when `needed` mm won't fit; returns the new cursor.
+  const ensureSpace = (needed, currentY) => {
+    if (currentY + needed <= bottomLimit) return currentY;
+    pdf.addPage();
+    drawAccentBar();
+    return newPageTop;
+  };
+
+  drawAccentBar();
 
   // Business info
   const businessName =
@@ -163,20 +178,24 @@ export function generateInvoicePdf({ invoice, client, company, user, options }) 
   const unitWidth = usableWidth * 0.16;
   const headerY = y;
 
-  pdf.setFillColor(brandBlue.r, brandBlue.g, brandBlue.b);
-  pdf.roundedRect(marginLeft, headerY - 6, usableWidth, 10, 1, 1, "F");
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(9);
-  pdf.setTextColor(255, 255, 255);
-  pdf.text("DESCRIPTION", marginLeft + 3, headerY);
-  pdf.text("QUANTITY", marginLeft + descWidth + 4, headerY, { align: "right" });
-  pdf.text("UNIT PRICE", marginLeft + descWidth + qtyWidth + 8, headerY, { align: "right" });
-  pdf.text("AMOUNT", marginLeft + descWidth + qtyWidth + unitWidth + 12, headerY, { align: "right" });
-  pdf.setTextColor(0);
-  pdf.setFont("helvetica", "normal");
-  pdf.setDrawColor(230, 230, 230);
+  // Drawn once per page so the columns stay labelled when the table breaks.
+  const drawTableHeader = (atY) => {
+    pdf.setFillColor(brandBlue.r, brandBlue.g, brandBlue.b);
+    pdf.roundedRect(marginLeft, atY - 6, usableWidth, 10, 1, 1, "F");
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text("DESCRIPTION", marginLeft + 3, atY);
+    pdf.text("QUANTITY", marginLeft + descWidth + 4, atY, { align: "right" });
+    pdf.text("UNIT PRICE", marginLeft + descWidth + qtyWidth + 8, atY, { align: "right" });
+    pdf.text("AMOUNT", marginLeft + descWidth + qtyWidth + unitWidth + 12, atY, { align: "right" });
+    pdf.setTextColor(0);
+    pdf.setFont("helvetica", "normal");
+    pdf.setDrawColor(230, 230, 230);
+    return atY + 8;
+  };
 
-  let rowY = headerY + 8;
+  let rowY = drawTableHeader(headerY);
   let visibleRowIndex = 0;
   lineItems.forEach((item) => {
     const amount = typeof item.amountCents === "number" && Number.isFinite(item.amountCents) ? item.amountCents : 0;
@@ -184,6 +203,13 @@ export function generateInvoicePdf({ invoice, client, company, user, options }) 
     if (!desc && !amount) return;
     const wrappedDesc = pdf.splitTextToSize(desc, descWidth - 4);
     const rowHeight = Math.max(10, wrappedDesc.length * 5 + 6);
+
+    // Carry the table onto a new page rather than running off the bottom.
+    if (rowY + rowHeight > bottomLimit) {
+      pdf.addPage();
+      drawAccentBar();
+      rowY = drawTableHeader(newPageTop);
+    }
 
     // Alternating row background
     if (visibleRowIndex % 2 === 1) {
@@ -207,6 +233,7 @@ export function generateInvoicePdf({ invoice, client, company, user, options }) 
     visibleRowIndex++;
   });
 
+  rowY = ensureSpace(16, rowY);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(brandBlue.r, brandBlue.g, brandBlue.b);
   pdf.text("TOTAL", marginLeft + descWidth + qtyWidth + unitWidth + 12, rowY + 6, { align: "right" });
@@ -214,7 +241,8 @@ export function generateInvoicePdf({ invoice, client, company, user, options }) 
   pdf.setTextColor(0);
   y = rowY + 20;
 
-  // Footer
+  // Footer — keep the whole block together rather than splitting it.
+  y = ensureSpace(26, y);
   pdf.setFillColor(paleBlue.r, paleBlue.g, paleBlue.b);
   pdf.roundedRect(marginLeft, y - 6, usableWidth, 20, 2, 2, "F");
   pdf.setFont("helvetica", "bold");
@@ -229,6 +257,25 @@ export function generateInvoicePdf({ invoice, client, company, user, options }) 
   pdf.text(businessName, marginLeft + 32, y + 6);
   const contactLine = [contactName, phone].filter(Boolean).join(" @ ");
   if (contactLine) pdf.text(`Contact: ${contactLine}`, marginLeft + 4, y + 12);
+
+  // Only stamp pages when the invoice actually spilled over, so ordinary
+  // single-page invoices look exactly as they did before.
+  const pageCount = pdf.internal.getNumberOfPages();
+  if (pageCount > 1) {
+    for (let page = 1; page <= pageCount; page++) {
+      pdf.setPage(page);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8);
+      pdf.setTextColor(130);
+      if (invoiceNumber) {
+        pdf.text(`Invoice ${invoiceNumber}`, marginLeft, pageHeight - 10);
+      }
+      pdf.text(`Page ${page} of ${pageCount}`, pageWidth - marginRight, pageHeight - 10, {
+        align: "right",
+      });
+    }
+    pdf.setTextColor(0);
+  }
 
   // Return base64 instead of downloading
   if (options?.returnBase64) {
