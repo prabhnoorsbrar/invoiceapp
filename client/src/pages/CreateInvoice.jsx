@@ -79,16 +79,7 @@ function createLineItem(overrides = {}) {
 
   return merged;
 }
-export default function CreateInvoice({ company, currentUser, prefill, onPrefillConsumed }) {
-  const [toast, setToast] = useState(null);
-  const toastTimer = React.useRef(null);
-
-  function showToast(message, type = "info") {
-    clearTimeout(toastTimer.current);
-    setToast({ message, type });
-    toastTimer.current = setTimeout(() => setToast(null), 4000);
-  }
-
+export default function CreateInvoice({ company, currentUser, prefill, onPrefillConsumed, showToast }) {
   const [step, setStep] = useState(1);
   const [clients, setClients] = useState([]);
   const [routes, setRoutes] = useState([]);
@@ -569,13 +560,6 @@ export default function CreateInvoice({ company, currentUser, prefill, onPrefill
 
   return (
     <div className="relative">
-      {toast && (
-        <div className="toast toast-top toast-center z-50">
-          <div className={`alert ${toast.type === "success" ? "alert-success" : toast.type === "error" ? "alert-error" : "alert-info"} shadow-lg`}>
-            <span>{toast.message}</span>
-          </div>
-        </div>
-      )}
     <div className="relative">
       <div className="grid lg:grid-cols-[1fr_420px] gap-6">
         <section className="space-y-6">

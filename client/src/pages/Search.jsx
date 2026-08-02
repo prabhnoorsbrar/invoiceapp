@@ -104,7 +104,7 @@ function InvoiceCard({ r, onReopen, onDelete, onDuplicate, company, currentUser 
   );
 }
 
-export default function Search({ onDuplicate, company, currentUser }) {
+export default function Search({ onDuplicate, company, currentUser, showToast }) {
   const [q, setQ] = useState("");
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -133,10 +133,15 @@ export default function Search({ onDuplicate, company, currentUser }) {
     setReopening(true);
     try {
       await api.reopen(reopenTarget._id);
+      showToast?.(`Invoice #${reopenTarget.invoiceNumber} moved back to outstanding.`, "success");
       setRows((prev) => prev.map((r) => r._id === reopenTarget._id ? { ...r, status: "outstanding", paidDate: null } : r));
       setReopenTarget(null);
-    } catch (err) { console.error(err); }
-    finally { setReopening(false); }
+    } catch (err) {
+      console.error(err);
+      showToast?.(err.message || "Failed to reopen invoice.", "error");
+    } finally {
+      setReopening(false);
+    }
   }
 
   async function confirmDelete() {
@@ -144,10 +149,15 @@ export default function Search({ onDuplicate, company, currentUser }) {
     setDeleting(true);
     try {
       await api.deleteInvoice(deleteTarget._id);
+      showToast?.(`Invoice #${deleteTarget.invoiceNumber} deleted.`, "success");
       setRows((prev) => prev.filter((r) => r._id !== deleteTarget._id));
       setDeleteTarget(null);
-    } catch (err) { console.error(err); }
-    finally { setDeleting(false); }
+    } catch (err) {
+      console.error(err);
+      showToast?.(err.message || "Failed to delete invoice.", "error");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (

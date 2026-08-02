@@ -14,6 +14,14 @@ export default function App() {
   const [prefill, setPrefill] = useState(null);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [outstandingCount, setOutstandingCount] = useState(0);
+  const [toast, setToast] = useState(null);
+  const toastTimer = React.useRef(null);
+
+  function showToast(message, type = "info") {
+    clearTimeout(toastTimer.current);
+    setToast({ message, type });
+    toastTimer.current = setTimeout(() => setToast(null), 4000);
+  }
 
   React.useEffect(() => {
     function handleExpired() {
@@ -49,6 +57,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-base-200 flex flex-col">
+      {toast && (
+        <div className="toast toast-top toast-center z-50">
+          <div className={`alert ${toast.type === "success" ? "alert-success" : toast.type === "error" ? "alert-error" : "alert-info"} shadow-lg`}>
+            <span>{toast.message}</span>
+          </div>
+        </div>
+      )}
       {/* Top header */}
       <header className="sticky top-0 z-40 px-4 py-3 flex items-center justify-between shadow-lg border-b border-white/[0.08]" style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.18) 0%, rgba(109,40,217,0.14) 50%, rgba(15,23,42,0.85) 100%)", backdropFilter: "blur(20px)" }}>
         <button onClick={() => setView("outstanding")} className="font-black text-xl tracking-tight text-base-content hover:opacity-80 transition-opacity cursor-pointer">
@@ -99,15 +114,16 @@ export default function App() {
 
       {/* Page content */}
       <main className="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto pb-24 md:pb-6">
-        {view === "create" && <CreateInvoice company={company} currentUser={user} prefill={prefill} onPrefillConsumed={() => setPrefill(null)} />}
+        {view === "create" && <CreateInvoice company={company} currentUser={user} prefill={prefill} onPrefillConsumed={() => setPrefill(null)} showToast={showToast} />}
         {view === "outstanding" && (
           <Outstanding
             company={company}
             currentUser={user}
             onCountChange={setOutstandingCount}
+            showToast={showToast}
           />
         )}
-        {view === "search" && <Search onDuplicate={(r) => { setPrefill(r); setView("create"); }} company={company} currentUser={user} />}
+        {view === "search" && <Search onDuplicate={(r) => { setPrefill(r); setView("create"); }} company={company} currentUser={user} showToast={showToast} />}
         {view === "settings" && (
           <Settings
             currentUser={user}
