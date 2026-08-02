@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api, setCurrentUser } from "../api";
+import Modal from "../components/Modal";
 
 function parseEmails(str) {
   return str.split(/[,\n;]/).map((s) => s.trim()).filter(Boolean);
@@ -48,12 +49,7 @@ function ClientFormModal({ client, onSave, onDelete, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-base-100/80 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/10">
-          <h2 className="text-lg font-bold">{isNew ? "Add Client" : "Edit Client"}</h2>
-          <button onClick={onClose} className="text-base-content/40 hover:text-base-content transition-colors text-xl leading-none">✕</button>
-        </div>
+    <Modal onClose={onClose} title={isNew ? "Add Client" : "Edit Client"} size="md" closeDisabled={saving || deleting}>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="form-control">
             <label className="label pb-1"><span className="label-text font-semibold">Name</span></label>
@@ -124,8 +120,7 @@ function ClientFormModal({ client, onSave, onDelete, onClose }) {
             </div>
           )}
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }
 

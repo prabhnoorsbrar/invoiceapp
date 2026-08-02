@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { api } from "../api";
+import Modal from "../components/Modal";
 import { generateInvoicePdf } from "../utils/generateInvoicePdf";
 
 function currency(cents) {
@@ -124,13 +125,8 @@ function EditInvoiceModal({ invoice, onSave, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-base-100/80 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/10 shrink-0">
-          <h2 className="text-lg font-bold">Edit Invoice</h2>
-          <button onClick={onClose} className="text-base-content/40 hover:text-base-content transition-colors text-xl leading-none">✕</button>
-        </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+    <Modal onClose={onClose} title="Edit Invoice" size="lg" closeDisabled={saving}>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Header fields */}
           <div className="grid grid-cols-2 gap-4">
             <div className="form-control">
@@ -205,8 +201,7 @@ function EditInvoiceModal({ invoice, onSave, onClose }) {
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -566,8 +561,7 @@ export default function Outstanding({ company, currentUser, onCountChange, showT
 
       {/* Single mark paid modal */}
       {markPaidTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-base-100/80 backdrop-blur-xl rounded-2xl p-6 w-full max-w-sm border border-white/10 shadow-2xl space-y-4">
+        <Modal onClose={() => setMarkPaidTarget(null)} label="Mark invoice as paid" size="sm" bodyClassName="p-6 space-y-4" closeDisabled={markingPaid}>
             <div>
               <h3 className="text-lg font-bold text-base-content">Mark as Paid</h3>
               <p className="text-sm text-base-content/40 mt-1">#{markPaidTarget.invoiceNumber} · {markPaidTarget.client?.name} · {currency(markPaidTarget.amountCents)}</p>
@@ -588,14 +582,12 @@ export default function Outstanding({ company, currentUser, onCountChange, showT
                 {markingPaid ? <span className="loading loading-spinner loading-sm" /> : "Confirm"}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Bulk mark paid modal */}
       {bulkPaidOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-base-100/80 backdrop-blur-xl rounded-2xl p-6 w-full max-w-sm border border-white/10 shadow-2xl space-y-4">
+        <Modal onClose={() => setBulkPaidOpen(false)} label="Mark selected invoices as paid" size="sm" bodyClassName="p-6 space-y-4" closeDisabled={bulkMarking}>
             <div>
               <h3 className="text-lg font-bold text-base-content">Mark {selected.size} Invoice{selected.size !== 1 ? "s" : ""} as Paid</h3>
               <p className="text-sm text-base-content/40 mt-1">All selected invoices will be marked paid with the same date.</p>
@@ -616,14 +608,12 @@ export default function Outstanding({ company, currentUser, onCountChange, showT
                 {bulkMarking ? <span className="loading loading-spinner loading-sm" /> : `Mark ${selected.size} Paid`}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Delete modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-base-100/80 backdrop-blur-xl rounded-2xl p-6 w-full max-w-sm border border-white/10 shadow-2xl space-y-4">
+        <Modal onClose={() => setDeleteTarget(null)} label="Confirm invoice deletion" size="sm" bodyClassName="p-6 space-y-4" closeDisabled={deleting}>
             <h3 className="text-lg font-bold text-base-content">Delete Invoice?</h3>
             <p className="text-sm text-base-content/50">
               <strong>#{deleteTarget.invoiceNumber}</strong> · {deleteTarget.client?.name} · {currency(deleteTarget.amountCents)} will be permanently deleted.
@@ -634,8 +624,7 @@ export default function Outstanding({ company, currentUser, onCountChange, showT
                 {deleting ? <span className="loading loading-spinner loading-sm" /> : "Delete"}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Edit invoice modal */}
