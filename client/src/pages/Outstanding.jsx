@@ -333,7 +333,7 @@ function InvoiceCard({ r, onMarkPaid, onDelete, onEdit, company, currentUser, se
   );
 }
 
-export default function Outstanding({ company, currentUser, onCountChange }) {
+export default function Outstanding({ company, currentUser, onCountChange, showToast }) {
   const [rows, setRows] = useState([]);
   const [kpi, setKpi] = useState({ outstandingTotalCents: 0, outstandingCount: 0, ytdIncomeCents: 0 });
   const [loading, setLoading] = useState(true);
@@ -379,10 +379,15 @@ export default function Outstanding({ company, currentUser, onCountChange }) {
     setMarkingPaid(true);
     try {
       await api.markPaid(markPaidTarget._id, { paidDate, paymentMethod: paidMethod || undefined });
+      showToast?.(`Invoice #${markPaidTarget.invoiceNumber} marked as paid.`, "success");
       setMarkPaidTarget(null);
       loadData();
-    } catch (err) { console.error(err); }
-    finally { setMarkingPaid(false); }
+    } catch (err) {
+      console.error(err);
+      showToast?.(err.message || "Failed to mark invoice as paid.", "error");
+    } finally {
+      setMarkingPaid(false);
+    }
   }
 
   async function confirmBulkPaid() {
@@ -390,11 +395,16 @@ export default function Outstanding({ company, currentUser, onCountChange }) {
     setBulkMarking(true);
     try {
       await Promise.all([...selected].map((id) => api.markPaid(id, { paidDate: bulkPaidDate, paymentMethod: bulkPaidMethod || undefined })));
+      showToast?.(`${selected.size} invoice${selected.size !== 1 ? "s" : ""} marked as paid.`, "success");
       setSelected(new Set());
       setBulkPaidOpen(false);
       loadData();
-    } catch (err) { console.error(err); }
-    finally { setBulkMarking(false); }
+    } catch (err) {
+      console.error(err);
+      showToast?.(err.message || "Failed to mark invoices as paid.", "error");
+    } finally {
+      setBulkMarking(false);
+    }
   }
 
   async function confirmDelete() {
@@ -402,10 +412,15 @@ export default function Outstanding({ company, currentUser, onCountChange }) {
     setDeleting(true);
     try {
       await api.deleteInvoice(deleteTarget._id);
+      showToast?.(`Invoice #${deleteTarget.invoiceNumber} deleted.`, "success");
       setDeleteTarget(null);
       loadData();
-    } catch (err) { console.error(err); }
-    finally { setDeleting(false); }
+    } catch (err) {
+      console.error(err);
+      showToast?.(err.message || "Failed to delete invoice.", "error");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   function toggleSelect(id) {
@@ -630,6 +645,7 @@ export default function Outstanding({ company, currentUser, onCountChange }) {
           onSave={(updated) => {
             setRows((prev) => prev.map((r) => r._id === updated._id ? { ...updated, client: updated.client || r.client } : r));
             setEditTarget(null);
+            showToast?.(`Invoice #${updated.invoiceNumber} updated.`, "success");
           }}
           onClose={() => setEditTarget(null)}
         />
