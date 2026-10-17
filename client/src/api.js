@@ -163,6 +163,9 @@ export const api = {
   search(q) {
     return request(`/api/invoices/search?q=${encodeURIComponent(q)}`);
   },
+  ytdPaid() {
+    return request(`/api/invoices/ytd-paid`);
+  },
   updateInvoice(id, payload) {
     return request(`/api/invoices/${encodeURIComponent(id)}`, { method: "PATCH", body: payload });
   },

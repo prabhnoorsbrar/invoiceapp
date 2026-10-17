@@ -240,6 +240,32 @@ export const lastNumber = asyncHandler(async (req, res) => {
   res.json({ invoiceNumber: latest?.invoiceNumber || null })
 })
 
+// GET /api/invoices/ytd-paid
+// Every invoice paid in the current calendar year, no row cap.
+// Uses the same year window as /kpis so the CSV total always equals "YTD Collected".
+export const listYtdPaid = asyncHandler(async (req, res) => {
+  const { companyId } = req.user
+  const now = new Date()
+  const yearStart = new Date(now.getFullYear(), 0, 1)
+  const yearEnd = new Date(now.getFullYear() + 1, 0, 1)
+
+  const rows = await Invoice.find({
+    companyId,
+    status: 'paid',
+    paidDate: { $gte: yearStart, $lt: yearEnd },
+  })
+    .sort({ invoiceDate: -1 })
+    .populate({ path: 'clientId', select: 'name address paymentTermsDays showDueDate emailTo cc' })
+    .lean()
+
+  res.json(
+    rows.map(({ clientId, ...rest }) => ({
+      ...rest,
+      client: clientId,
+    }))
+  )
+})
+
 // GET /api/invoices/kpis
 export const kpis = asyncHandler(async (req, res) => {
   const { companyId } = req.user
