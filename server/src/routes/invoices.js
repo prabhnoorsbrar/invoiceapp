@@ -8,6 +8,7 @@ import {
   markPaid,
   reopen,
   kpis,
+  listYtdPaid,
   remove,
   lastNumber,
   update,
@@ -18,6 +19,7 @@ r.get("/kpis", kpis);
 r.get("/last-number", lastNumber);
 r.get("/outstanding", listOutstanding);
 r.get("/search", search);
+r.get("/ytd-paid", listYtdPaid);
 r.post("/", requireRole("admin", "finance"), validate(schemas.createInvoice), create);
 r.post("/:id/mark-paid", requireRole("admin", "finance"), validate(schemas.markPaid), markPaid);
 r.post("/:id/reopen", requireRole("admin", "finance"), reopen);
